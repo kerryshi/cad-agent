@@ -16,7 +16,7 @@ DEFAULT_URL = "http://localhost:11434"
 
 class OllamaBackend:
     def __init__(self, model: str = DEFAULT_MODEL, base_url: str = DEFAULT_URL,
-                 timeout: float = 300.0):
+                 timeout: float = 900.0):  # 14B on a 12GB card legitimately needs minutes
         self.name = f"ollama:{model}"
         self.model = model
         self.base_url = base_url.rstrip("/")
