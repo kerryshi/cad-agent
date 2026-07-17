@@ -14,6 +14,20 @@ Same tasks, same sandbox, same verifier — the pass-rate gap is the artifact.
 Sonnet runs via the `claude -p` adapter on the Max plan (no API key needed).
 Its t1 part renders visually identical to the reference builder's output.
 
+**v2 family shipped (2026-07-17): drone frames.** Flat X-quad plate —
+FrameSpec (wheelbase, FC/motor mount pattern enums, prop-collision
+validation), reference builder + 3 sabotages, spec-derived frame verifier,
+family registry (`toolchain/families.py`) threading enclosure|frame through
+prompts/loop/golden. Frame golden run, claude-code:sonnet: **4/4 extract,
+4/4 codegen, all iter=1** (`results/claude-code-sonnet--frame_tasks.json`).
+
+**PRINT FILES STAGED for Kerry** (gitignored, `prints/`): agent-generated,
+probe-verified, PETG-sliced —
+- `prints/f1-5inch-freestyle/` — 63 min, 25 layers, 20.4 cm³ PETG
+- `prints/f2-3inch-micro/` — 44 min, 20 layers, 10.8 cm³ PETG
+Each has the `.3mf` (open in Bambu Studio → print), raw gcode, and renders.
+After printing: check hole fit (M3/M2 screws), plate flatness, arm stiffness.
+
 **What this is:** English request → parametric CAD (CadQuery) → deterministic
 verification → (later) slice check → print on the Bambu P2S. v1 vertical:
 project enclosures (open-top body + inset screw-down lid on corner posts).

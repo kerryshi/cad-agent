@@ -61,7 +61,9 @@ def _parse_duration(text: str) -> float:
 
 
 def _parse_stats(result: SliceResult) -> None:
-    head = result.gcode.read_text(encoding="utf-8", errors="replace")[:20000]
+    # time/layers sit at the top of the gcode; filament totals at the bottom
+    text = result.gcode.read_text(encoding="utf-8", errors="replace")
+    head = text[:20000] + text[-40000:]
     if m := re.search(r"total estimated time: ([^;\n]+)", head):
         result.minutes = _parse_duration(m.group(1))
     if m := re.search(r"total layer number: (\d+)", head):
@@ -98,12 +100,20 @@ def slice_stl(stl: Path, out_dir: Path, part: str, timeout: float = 300.0) -> Sl
     return result
 
 
-def slice_workdir(workdir: Path, out_dir: Path | None = None) -> list[SliceResult]:
-    """Slice body.step and lid.step from a build workdir, each on its own plate."""
+DEFAULT_PARTS = ((BODY_STEP, "body"), (LID_STEP, "lid"))
+
+
+def slice_workdir(workdir: Path, out_dir: Path | None = None,
+                  parts: tuple = DEFAULT_PARTS) -> list[SliceResult]:
+    """Slice each part STEP from a build workdir, each on its own plate.
+
+    `parts` is (filename, partname) pairs — defaults to the enclosure contract;
+    pass ((FRAME_STEP, "frame"),) for the frame family.
+    """
     workdir = Path(workdir)
     out_dir = Path(out_dir) if out_dir else workdir / "slice"
     results = []
-    for filename, part in ((BODY_STEP, "body"), (LID_STEP, "lid")):
+    for filename, part in parts:
         path = workdir / filename
         if not path.is_file():
             results.append(SliceResult(part, False, f"missing {filename}"))

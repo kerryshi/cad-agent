@@ -1,0 +1,75 @@
+{
+  "backend": "claude-code:sonnet",
+  "stage": "both",
+  "max_iterations": 3,
+  "rows": [
+    {
+      "id": "f1-5inch-freestyle",
+      "family": "frame",
+      "extract": {
+        "ok": true,
+        "parsed": true,
+        "attempts": 1,
+        "seconds": 8.0,
+        "error": ""
+      },
+      "codegen": {
+        "ok": true,
+        "iterations": 1,
+        "seconds": 89.0,
+        "failures_last": []
+      }
+    },
+    {
+      "id": "f2-3inch-micro",
+      "family": "frame",
+      "extract": {
+        "ok": true,
+        "parsed": true,
+        "attempts": 1,
+        "seconds": 8.5,
+        "error": ""
+      },
+      "codegen": {
+        "ok": true,
+        "iterations": 1,
+        "seconds": 107.4,
+        "failures_last": []
+      }
+    },
+    {
+      "id": "f3-2inch-whoopish",
+      "family": "frame",
+      "extract": {
+        "ok": true,
+        "parsed": true,
+        "attempts": 1,
+        "seconds": 7.4,
+        "error": ""
+      },
+      "codegen": {
+        "ok": true,
+        "iterations": 1,
+        "seconds": 131.9,
+        "failures_last": []
+      }
+    },
+    {
+      "id": "f4-7inch-longrange",
+      "family": "frame",
+      "extract": {
+        "ok": true,
+        "parsed": true,
+        "attempts": 1,
+        "seconds": 7.6,
+        "error": ""
+      },
+      "codegen": {
+        "ok": true,
+        "iterations": 1,
+        "seconds": 74.7,
+        "failures_last": []
+      }
+    }
+  ]
+}

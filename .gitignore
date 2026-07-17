@@ -3,6 +3,7 @@ __pycache__/
 *.pyc
 .pytest_cache/
 out/
+prints/
 *.stl
 *.step
 !golden/**/*.step
