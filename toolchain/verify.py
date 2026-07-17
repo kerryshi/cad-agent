@@ -23,18 +23,17 @@ from __future__ import annotations
 
 import json
 import sys
-import tempfile
-from dataclasses import dataclass
 from pathlib import Path
 
 import cadquery as cq
-import trimesh
-from OCP.Bnd import Bnd_Box
-from OCP.BRepBndLib import BRepBndLib
-from OCP.BRepClass3d import BRepClass3d_SolidClassifier
-from OCP.gp import gp_Pnt
-from OCP.TopAbs import TopAbs_State
 
+from toolchain.checks import (
+    Check,
+    Probe,
+    Report,
+    check_bbox,
+    load_single_solid,
+)
 from toolchain.spec import (
     BODY_STEP,
     LID_STEP,
@@ -45,93 +44,11 @@ from toolchain.spec import (
 )
 
 BBOX_TOL = 0.1  # mm, on every bounding-box comparison
-CLASSIFY_TOL = 1e-4
 INTERFERENCE_TOL = 1e-3  # mm^3
 DEPTH_FRACTIONS = (0.35, 0.9)  # probe depths as fraction of nominal thickness
 EDGE_EPS = 0.5  # void probes sit this far inside a cutout's expected edge
 OUTSIDE_MARGIN = 1.0  # solid probes sit this far outside a cutout's boundary
 CUTOUT_EXCLUDE = 2.0  # wall probes keep this margin away from cutouts
-
-
-@dataclass
-class Check:
-    name: str
-    ok: bool
-    detail: str
-
-
-@dataclass
-class Report:
-    checks: list[Check]
-
-    @property
-    def ok(self) -> bool:
-        return all(c.ok for c in self.checks)
-
-    def failures(self) -> list[Check]:
-        return [c for c in self.checks if not c.ok]
-
-    def text(self) -> str:
-        lines = [f"{'PASS' if c.ok else 'FAIL'}  {c.name}: {c.detail}" for c in self.checks]
-        lines.append(f"=> {'OK' if self.ok else f'{len(self.failures())} FAILURE(S)'}")
-        return "\n".join(lines)
-
-
-class _Probe:
-    def __init__(self, shape: cq.Shape):
-        self._c = BRepClass3d_SolidClassifier(shape.wrapped)
-
-    def solid(self, x: float, y: float, z: float) -> bool:
-        self._c.Perform(gp_Pnt(x, y, z), CLASSIFY_TOL)
-        return self._c.State() == TopAbs_State.TopAbs_IN
-
-
-def _bbox(shape: cq.Shape) -> tuple[float, float, float, float, float, float]:
-    box = Bnd_Box()
-    BRepBndLib.AddOptimal_s(shape.wrapped, box, True, False)
-    lo, hi = box.CornerMin(), box.CornerMax()
-    return (lo.X(), lo.Y(), lo.Z(), hi.X(), hi.Y(), hi.Z())
-
-
-def _load_solid(path: Path, label: str, checks: list[Check]) -> cq.Shape | None:
-    if not Path(path).is_file():
-        checks.append(Check(f"{label}.load", False, f"missing file {path}"))
-        return None
-    try:
-        solids = cq.importers.importStep(str(path)).solids().vals()
-    except Exception as e:
-        checks.append(Check(f"{label}.load", False, f"unreadable STEP: {e}"))
-        return None
-    if len(solids) != 1:
-        checks.append(Check(f"{label}.load", False, f"expected 1 solid, got {len(solids)}"))
-        return None
-    shape = solids[0]
-    checks.append(Check(f"{label}.load", True, f"1 solid from {Path(path).name}"))
-    checks.append(Check(f"{label}.valid", shape.isValid(), "BRepCheck_Analyzer"))
-    checks.append(_watertight(shape, label))
-    return shape
-
-
-def _watertight(shape: cq.Shape, label: str) -> Check:
-    with tempfile.TemporaryDirectory() as td:
-        stl = Path(td) / "mesh.stl"
-        cq.exporters.export(shape, str(stl))
-        mesh = trimesh.load(str(stl))
-        return Check(
-            f"{label}.watertight", bool(mesh.is_watertight),
-            f"exported mesh, {len(mesh.faces)} faces",
-        )
-
-
-def _check_bbox(shape: cq.Shape, label: str, expect) -> Check:
-    got = _bbox(shape)
-    errs = [abs(g - e) for g, e in zip(got, expect)]
-    ok = max(errs) <= BBOX_TOL
-    return Check(
-        f"{label}.bbox", ok,
-        f"max err {max(errs):.3f}mm (tol {BBOX_TOL}); got "
-        + "({:.2f},{:.2f},{:.2f})-({:.2f},{:.2f},{:.2f})".format(*got),
-    )
 
 
 def _cutout_zones(spec: EnclosureSpec, face: Face) -> list[tuple[float, float, float, float]]:
@@ -148,7 +65,7 @@ def _cutout_zones(spec: EnclosureSpec, face: Face) -> list[tuple[float, float, f
     return zones
 
 
-def _check_walls(spec: EnclosureSpec, probe: _Probe) -> list[Check]:
+def _check_walls(spec: EnclosureSpec, probe: Probe) -> list[Check]:
     checks = []
     z_lo, z_hi = spec.floor, spec.post_top_z
     z_samples = [z_lo + f * (z_hi - z_lo) for f in (0.3, 0.7)]
@@ -196,7 +113,7 @@ def _check_walls(spec: EnclosureSpec, probe: _Probe) -> list[Check]:
     return checks
 
 
-def _check_posts(spec: EnclosureSpec, probe: _Probe) -> list[Check]:
+def _check_posts(spec: EnclosureSpec, probe: Probe) -> list[Check]:
     """Corner posts: solid ring at mid-height, pilot void below the post top."""
     checks = []
     ring_r = (spec.post_diameter / 2 + SCREWS[spec.screw].pilot / 2) / 2
@@ -217,7 +134,7 @@ def _check_posts(spec: EnclosureSpec, probe: _Probe) -> list[Check]:
     return checks
 
 
-def _check_standoffs(spec: EnclosureSpec, probe: _Probe) -> list[Check]:
+def _check_standoffs(spec: EnclosureSpec, probe: Probe) -> list[Check]:
     checks = []
     for i, s in enumerate(spec.standoffs):
         ring_r = (s.od() / 2 + SCREWS[s.screw].pilot / 2) / 2
@@ -238,7 +155,7 @@ def _check_standoffs(spec: EnclosureSpec, probe: _Probe) -> list[Check]:
     return checks
 
 
-def _check_cutouts(spec: EnclosureSpec, probe: _Probe) -> list[Check]:
+def _check_cutouts(spec: EnclosureSpec, probe: Probe) -> list[Check]:
     checks = []
     for i, c in enumerate(spec.cutouts):
         mid = spec.wall / 2
@@ -291,11 +208,11 @@ def _check_lid(spec: EnclosureSpec, lid: cq.Shape, body: cq.Shape) -> list[Check
     lw, ld = spec.lid_size
     x0 = spec.wall + spec.fit_clearance
     y0 = spec.wall + spec.fit_clearance
-    checks.append(_check_bbox(
-        lid, "lid", (x0, y0, spec.post_top_z, x0 + lw, y0 + ld, spec.height)
+    checks.append(check_bbox(
+        lid, "lid", (x0, y0, spec.post_top_z, x0 + lw, y0 + ld, spec.height), BBOX_TOL
     ))
 
-    probe = _Probe(lid)
+    probe = Probe(lid)
     z_mid = spec.post_top_z + spec.lid_thickness / 2
     blocked = [
         f"({px:.1f},{py:.1f})" for px, py in spec.post_centers()
@@ -323,14 +240,14 @@ def verify(spec: EnclosureSpec, out_dir: Path) -> Report:
     out_dir = Path(out_dir)
     checks: list[Check] = []
 
-    body = _load_solid(out_dir / BODY_STEP, "body", checks)
-    lid = _load_solid(out_dir / LID_STEP, "lid", checks)
+    body = load_single_solid(out_dir / BODY_STEP, "body", checks)
+    lid = load_single_solid(out_dir / LID_STEP, "lid", checks)
 
     if body is not None:
-        checks.append(_check_bbox(
-            body, "body", (0, 0, 0, spec.length, spec.width, spec.height)
+        checks.append(check_bbox(
+            body, "body", (0, 0, 0, spec.length, spec.width, spec.height), BBOX_TOL
         ))
-        probe = _Probe(body)
+        probe = Probe(body)
         checks.extend(_check_walls(spec, probe))
         checks.extend(_check_posts(spec, probe))
         checks.extend(_check_standoffs(spec, probe))

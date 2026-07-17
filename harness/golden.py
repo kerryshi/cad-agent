@@ -18,7 +18,7 @@ from pathlib import Path
 
 from harness.backends import get_backend
 from harness.loop import extract_spec, generate_part
-from toolchain.spec import EnclosureSpec
+from toolchain.families import get_family
 
 ROOT = Path(__file__).parent.parent
 
@@ -26,7 +26,8 @@ ROOT = Path(__file__).parent.parent
 def load_tasks(path: Path) -> list[dict]:
     tasks = json.loads(path.read_text(encoding="utf-8"))
     for t in tasks:
-        EnclosureSpec.model_validate(t["expected"])  # fail loud on a bad golden file
+        fam = get_family(t.get("family", "enclosure"))
+        fam.spec_cls.model_validate(t["expected"])  # fail loud on a bad golden file
     return tasks
 
 
@@ -59,18 +60,22 @@ def main(argv: list[str] | None = None) -> int:
         tasks = tasks[: args.limit]
 
     safe_name = backend.name.replace(":", "-").replace("/", "-").replace(".", "_")
+    stem = Path(args.tasks).stem
+    if stem != "tasks":  # non-default task file gets its own results/workdir names
+        safe_name = f"{safe_name}--{stem}"
     workroot = ROOT / "out" / "golden" / safe_name
     results_dir = ROOT / "results"
     results_dir.mkdir(exist_ok=True)
 
     rows = []
     for task in tasks:
-        expected = EnclosureSpec.model_validate(task["expected"])
-        row: dict = {"id": task["id"]}
+        fam = get_family(task.get("family", "enclosure"))
+        expected = fam.spec_cls.model_validate(task["expected"])
+        row: dict = {"id": task["id"], "family": fam.name}
 
         if args.stage in ("extract", "both"):
             t0 = time.monotonic()
-            er = extract_spec(backend, task["request"])
+            er = extract_spec(backend, task["request"], fam)
             match = bool(
                 er.ok
                 and approx_equal(
@@ -87,7 +92,7 @@ def main(argv: list[str] | None = None) -> int:
 
         if args.stage in ("codegen", "both"):
             t0 = time.monotonic()
-            cr = generate_part(backend, expected, workroot / task["id"],
+            cr = generate_part(backend, expected, workroot / task["id"], fam,
                                max_iterations=args.max_iterations)
             row["codegen"] = {
                 "ok": cr.ok, "iterations": cr.iterations,

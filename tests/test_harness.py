@@ -65,6 +65,46 @@ CRASHING_SCRIPT = "import sys\nsys.exit(3)\n"
 CHEATING_SCRIPT = "from toolchain.reference import build\n"
 HANGING_SCRIPT = "while True:\n    pass\n"
 
+# A correct "generated" script for the frame family — bare cadquery + stdlib.
+FRAME_GOOD_SCRIPT = """
+import json, math
+import cadquery as cq
+from cadquery import Solid, Vector
+
+s = json.load(open("spec.json"))
+wb = s["wheelbase"]; t = s.get("plate_thickness", 4.0)
+aw = s.get("arm_width", 12.0); b = s.get("body_width", 36.0)
+fc = s.get("fc_mount", "30.5x30.5-M3"); mm = s.get("motor_mount", "16x16-M3")
+hub = s.get("hub_hole_diameter", 8.0)
+size = {"30.5x30.5-M3": 30.5, "25.5x25.5-M2": 25.5, "20x20-M2": 20.0,
+        "16x16-M3": 16.0, "19x19-M3": 19.0, "12x12-M2": 12.0, "9x9-M2": 9.0}
+clear = {"M3": 3.4, "M2": 2.4}
+fc_d = clear[fc.split("-")[1]]; mm_d = clear[mm.split("-")[1]]
+R = wb / 2; pad = size[mm] * math.sqrt(2) + 8
+
+frame = Solid.makeBox(b, b, t, Vector(-b / 2, -b / 2, 0))
+angles = [45, 135, 225, 315]
+centers = [(R * math.cos(math.radians(a)), R * math.sin(math.radians(a))) for a in angles]
+for a, (cx, cy) in zip(angles, centers):
+    arm = Solid.makeBox(R, aw, t, Vector(0, -aw / 2, 0)).rotate(Vector(0, 0, 0), Vector(0, 0, 1), a)
+    frame = frame.fuse(arm).fuse(Solid.makeCylinder(pad / 2, t, Vector(cx, cy, 0), Vector(0, 0, 1)))
+
+def drill(x, y, d):
+    global frame
+    frame = frame.cut(Solid.makeCylinder(d / 2, t + 2, Vector(x, y, -1), Vector(0, 0, 1)))
+
+p = size[fc] / 2
+for x, y in ((p, p), (p, -p), (-p, p), (-p, -p)):
+    drill(x, y, fc_d)
+sh = size[mm] / 2
+for a, (cx, cy) in zip(angles, centers):
+    drill(cx, cy, hub)
+    ar = math.radians(a); ca, sa = math.cos(ar), math.sin(ar)
+    for u, v in ((sh, sh), (sh, -sh), (-sh, sh), (-sh, -sh)):
+        drill(cx + u * ca - v * sa, cy + u * sa + v * ca, mm_d)
+cq.exporters.export(frame, "frame.step")
+"""
+
 
 # ---- runner gates (each must REFUSE) ----
 
@@ -99,6 +139,16 @@ def test_loop_iterates_on_failure_then_succeeds(tmp_path):
     assert result.iterations == 2
     # the second prompt must carry failure feedback
     assert "FAILED" in backend.calls[1][1]
+
+
+def test_loop_frame_family(tmp_path):
+    from tests.test_frame import make_frame_spec
+    from toolchain.families import get_family
+
+    backend = ScriptedBackend([FRAME_GOOD_SCRIPT])
+    result = generate_part(backend, make_frame_spec(), tmp_path, get_family("frame"))
+    assert result.ok, result.detail
+    assert result.iterations == 1
 
 
 def test_loop_gives_up_at_cap(tmp_path):

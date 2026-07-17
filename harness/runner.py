@@ -19,7 +19,7 @@ import sys
 from dataclasses import dataclass
 from pathlib import Path
 
-from toolchain.spec import EnclosureSpec
+import pydantic
 
 SCRIPT_NAME = "gen_build.py"
 FORBIDDEN = re.compile(r"\btoolchain\b")
@@ -33,7 +33,7 @@ class RunResult:
     stderr: str = ""
 
 
-def run_codegen(code: str, spec: EnclosureSpec, workdir: Path,
+def run_codegen(code: str, spec: pydantic.BaseModel, workdir: Path,
                 timeout: float = 120.0) -> RunResult:
     """Write spec.json + the generated script into workdir and execute it."""
     if FORBIDDEN.search(code):

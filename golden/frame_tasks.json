@@ -1,0 +1,38 @@
+[
+  {
+    "id": "f1-5inch-freestyle",
+    "family": "frame",
+    "request": "A 5-inch freestyle quad frame plate: 220 mm wheelbase, 5 mm thick plate, 14 mm wide arms, 40 mm square body, 30.5x30.5 M3 flight controller mount, 16x16 M3 motor mounts, for 5 inch props.",
+    "expected": {
+      "wheelbase": 220, "plate_thickness": 5, "arm_width": 14, "body_width": 40,
+      "fc_mount": "30.5x30.5-M3", "motor_mount": "16x16-M3", "prop_size_inch": 5
+    }
+  },
+  {
+    "id": "f2-3inch-micro",
+    "family": "frame",
+    "request": "A 3-inch micro quad frame plate: 140 mm wheelbase, 4 mm thick plate, 12 mm wide arms, 36 mm square body, 20x20 M2 flight controller mount, 12x12 M2 motor mounts, for 3 inch props.",
+    "expected": {
+      "wheelbase": 140, "plate_thickness": 4, "arm_width": 12, "body_width": 36,
+      "fc_mount": "20x20-M2", "motor_mount": "12x12-M2", "prop_size_inch": 3
+    }
+  },
+  {
+    "id": "f3-2inch-whoopish",
+    "family": "frame",
+    "request": "A tiny 2-inch quad frame plate: 95 mm wheelbase, 3 mm thick plate, 10 mm wide arms, 34 mm square body, 25.5x25.5 M2 flight controller mount, 9x9 M2 motor mounts, for 2 inch props.",
+    "expected": {
+      "wheelbase": 95, "plate_thickness": 3, "arm_width": 10, "body_width": 34,
+      "fc_mount": "25.5x25.5-M2", "motor_mount": "9x9-M2", "prop_size_inch": 2
+    }
+  },
+  {
+    "id": "f4-7inch-longrange",
+    "family": "frame",
+    "request": "A 7-inch long-range quad frame plate: 300 mm wheelbase, 6 mm thick plate, 16 mm wide arms, 44 mm square body, 30.5x30.5 M3 flight controller mount, 19x19 M3 motor mounts, for 7 inch props.",
+    "expected": {
+      "wheelbase": 300, "plate_thickness": 6, "arm_width": 16, "body_width": 44,
+      "fc_mount": "30.5x30.5-M3", "motor_mount": "19x19-M3", "prop_size_inch": 7
+    }
+  }
+]
