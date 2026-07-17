@@ -1,7 +1,10 @@
 # cad-agent — STATUS
 
-**Where we are:** Phase A (toolchain) and Phase B (harness) built and committed
-with evidence. First real-model golden run (Ollama llama3.1:8b) in progress.
+**Where we are:** Phases A (toolchain) and B (harness) complete. Phase C:
+renderer DONE (VTK offscreen, validated); VLM critique built but shelved on an
+honest negative result (see below). Phase D part 1 DONE: headless OrcaSlicer
+slice check working with bundled P2S profiles. First golden column recorded
+(llama3.1:8b: extract 5/8, codegen 0/8).
 
 **What this is:** English request → parametric CAD (CadQuery) → deterministic
 verification → (later) slice check → print on the Bambu P2S. v1 vertical:
@@ -30,8 +33,24 @@ Phase-0 spike in a parallel session (gates only the auto-print leg).
 
 **Environment:** `.venv` = Python 3.12 (`py -3.12`; machine default `python` is
 3.13 — do not use). cadquery 2.8.0, pydantic 2.13.4, trimesh 4.12.2,
-anthropic 0.117.0, pytest. OrcaSlicer NOT installed (Phase D). Ollama up
-(llama3.1:8b, qwen3:4b); no vision model pulled (Phase C).
+anthropic 0.117.0, pytest. **OrcaSlicer 2.4.2 portable** at
+`C:\Users\PC\tools\OrcaSlicer` (winget install fails silently from a
+background shell — UAC 0x800704c7; portable build needs no elevation;
+`CAD_AGENT_ORCA` env var overrides the path). Ollama up (llama3.1:8b,
+qwen3:4b, qwen2.5vl:7b).
+
+**Phase C/D additions (2026-07-17):**
+- `toolchain/render.py` — VTK offscreen multi-view PNGs (4 body + 2 lid views),
+  no display/xvfb needed; tests assert non-blank pixels (blank frame is the
+  silent-failure mode of headless GL).
+- `harness/critique.py` — VLM gross-error critique, mechanically sound but
+  **NOT wired into the loop**: negative result — qwen2.5vl:7b hallucinates
+  issues on a good part (6 views) and passes a missing-post sabotage (2 views).
+  Revisit with Claude vision once API credentials exist.
+- `toolchain/slicecheck.py` — slices body and lid SEPARATELY (dropped to bed,
+  own plates) with P2S 0.4-nozzle + 0.20mm Standard + PLA Basic profiles;
+  parses time/layers/filament from gcode. CLI quirks documented in the module.
+  Reference body: 55m49s model time, 150 layers, 24.3 cm³.
 
 **Evidence so far:**
 - 19/19 pytest green (`tests/`): verify refuses all 4 sabotages (thin wall,
@@ -57,15 +76,15 @@ anthropic 0.117.0, pytest. OrcaSlicer NOT installed (Phase D). Ollama up
    access code. Then run the Phase-0 spike in a parallel session.
 
 **Next actions:**
-1. Read Ollama golden results (`results/ollama-llama3_1-8b.json`), record the
-   pass-rate table here, commit results.
-2. Anthropic golden run once credentials exist (see BLOCKED).
-3. Phase C: render.py (validate Windows offscreen rendering EARLY — finicky),
-   VLM critique (pull `qwen2.5-vl` or `llava`), frame Ollama codegen as
-   contract-proof, not quality parity.
-4. Phase D: install OrcaSlicer; slicecheck.py (slice body and lid SEPARATELY,
-   not as-assembled); one manual print, measure lid fit vs spec
-   (fit_clearance=0.2 is a guess until then).
+1. Anthropic golden run once credentials exist (see BLOCKED) — the headline
+   comparison column. Consider one `qwen2.5-coder:14b` run as a fairer local
+   baseline.
+2. Wire slicecheck into the golden runner as a printability column (verify
+   remains the gate; slice stats are reporting).
+3. First physical print: pick a verified part, print manually via the P2S,
+   measure lid fit vs spec (fit_clearance=0.2 is a guess until measured).
+4. Printer spike in a parallel session once Developer Mode is on (BLOCKED).
+5. Revisit VLM critique with Claude vision (same credentials as #1).
 
 **Open questions:** verify's oracles assume cooperative codegen (documented in
 verify.py); cutout checks cross-talk with wall defects (observed, harmless).
