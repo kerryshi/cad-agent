@@ -48,6 +48,7 @@ def test_good_part_ran_all_check_families(good_report):
     for expected in (
         "body.valid", "body.watertight", "body.bbox",
         "wall.+x", "wall.-x", "wall.+y", "wall.-y", "floor",
+        "post[0]", "post[1]", "post[2]", "post[3]",
         "standoff[0]", "standoff[1]", "cutout[0]", "cutout[1]",
         "lid.valid", "lid.watertight", "lid.bbox", "lid.screw_holes",
         "fit.interference",
@@ -74,6 +75,13 @@ def test_undersized_cutout_refused(tmp_path_factory):
     failed = {c.name for c in report.failures()}
     assert "cutout[0]" in failed, f"wrong checks fired: {failed}"
     assert "cutout[1]" not in failed, "untouched cutout falsely refused"
+
+
+def test_missing_post_refused(tmp_path_factory):
+    report = build_and_verify(tmp_path_factory, sabotage="missing_post")
+    failed = {c.name for c in report.failures()}
+    assert "post[0]" in failed, f"wrong checks fired: {failed}"
+    assert "post[1]" not in failed, "untouched post falsely refused"
 
 
 def test_missing_output_refused(tmp_path):

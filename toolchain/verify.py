@@ -97,7 +97,11 @@ def _load_solid(path: Path, label: str, checks: list[Check]) -> cq.Shape | None:
     if not Path(path).is_file():
         checks.append(Check(f"{label}.load", False, f"missing file {path}"))
         return None
-    solids = cq.importers.importStep(str(path)).solids().vals()
+    try:
+        solids = cq.importers.importStep(str(path)).solids().vals()
+    except Exception as e:
+        checks.append(Check(f"{label}.load", False, f"unreadable STEP: {e}"))
+        return None
     if len(solids) != 1:
         checks.append(Check(f"{label}.load", False, f"expected 1 solid, got {len(solids)}"))
         return None
@@ -189,6 +193,27 @@ def _check_walls(spec: EnclosureSpec, probe: _Probe) -> list[Check]:
         "floor", not misses,
         f"{probed} probes" + (f", missing material: {'; '.join(misses[:3])}" if misses else ", all solid"),
     ))
+    return checks
+
+
+def _check_posts(spec: EnclosureSpec, probe: _Probe) -> list[Check]:
+    """Corner posts: solid ring at mid-height, pilot void below the post top."""
+    checks = []
+    ring_r = (spec.post_diameter / 2 + SCREWS[spec.screw].pilot / 2) / 2
+    z_mid = (spec.floor + spec.post_top_z) / 2
+    pilot_depth = min(spec.screw_depth, spec.post_top_z - spec.floor)
+    z_pilot = spec.post_top_z - pilot_depth / 2
+    for i, (px, py) in enumerate(spec.post_centers()):
+        problems = []
+        for dx, dy in ((ring_r, 0), (-ring_r, 0), (0, ring_r), (0, -ring_r)):
+            if not probe.solid(px + dx, py + dy, z_mid):
+                problems.append(f"no post material at ring({dx:+.1f},{dy:+.1f})")
+        if probe.solid(px, py, z_pilot):
+            problems.append("pilot hole missing (center is solid near top)")
+        checks.append(Check(
+            f"post[{i}]", not problems,
+            f"({px:.1f},{py:.1f}): " + ("; ".join(problems[:3]) if problems else "ring solid, pilot void"),
+        ))
     return checks
 
 
@@ -307,6 +332,7 @@ def verify(spec: EnclosureSpec, out_dir: Path) -> Report:
         ))
         probe = _Probe(body)
         checks.extend(_check_walls(spec, probe))
+        checks.extend(_check_posts(spec, probe))
         checks.extend(_check_standoffs(spec, probe))
         checks.extend(_check_cutouts(spec, probe))
     if body is not None and lid is not None:

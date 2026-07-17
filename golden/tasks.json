@@ -1,0 +1,105 @@
+[
+  {
+    "id": "t1-pi-hat-box",
+    "request": "An enclosure 80 mm long, 60 mm wide, 30 mm tall (outer dimensions), default 2 mm walls and floor and 2.4 mm lid. Two M2.5 standoffs 6 mm tall, centered at (25, 20) and (55, 40). A 12 mm wide by 8 mm tall rectangular cutout on the +X wall centered at y=30, z=12, and an 8 mm diameter round hole on the -Y wall centered at x=40, z=15.",
+    "expected": {
+      "length": 80, "width": 60, "height": 30,
+      "standoffs": [
+        {"x": 25, "y": 20, "height": 6, "screw": "M2.5"},
+        {"x": 55, "y": 40, "height": 6, "screw": "M2.5"}
+      ],
+      "cutouts": [
+        {"kind": "rect", "face": "+x", "center": 30, "cz": 12, "width": 12, "height": 8},
+        {"kind": "circle", "face": "-y", "center": 40, "cz": 15, "diameter": 8}
+      ]
+    }
+  },
+  {
+    "id": "t2-minimal-box",
+    "request": "A plain enclosure, 40 mm long, 40 mm wide, 20 mm tall outside. Keep every default: 2 mm walls and floor, 2.4 mm lid, M3 screws. No standoffs and no cutouts.",
+    "expected": {"length": 40, "width": 40, "height": 20}
+  },
+  {
+    "id": "t3-big-controller",
+    "request": "A controller box 120 mm long, 80 mm wide, 45 mm tall outside, with 2.5 mm walls, a 3 mm floor, and a 3 mm thick lid. Use M4 screws with 9 mm diameter corner posts. Four M3 standoffs, 8 mm tall, at (20, 20), (100, 20), (100, 60), and (20, 60). One rectangular cutout on the +Y wall, 20 mm wide by 10 mm tall, centered at x=60, z=20.",
+    "expected": {
+      "length": 120, "width": 80, "height": 45,
+      "wall": 2.5, "floor": 3, "lid_thickness": 3,
+      "screw": "M4", "post_diameter": 9,
+      "standoffs": [
+        {"x": 20, "y": 20, "height": 8, "screw": "M3"},
+        {"x": 100, "y": 20, "height": 8, "screw": "M3"},
+        {"x": 100, "y": 60, "height": 8, "screw": "M3"},
+        {"x": 20, "y": 60, "height": 8, "screw": "M3"}
+      ],
+      "cutouts": [
+        {"kind": "rect", "face": "+y", "center": 60, "cz": 20, "width": 20, "height": 10}
+      ]
+    }
+  },
+  {
+    "id": "t4-usbc-dongle",
+    "request": "A small dongle case, 50 mm long, 30 mm wide, 18 mm tall outside, with 1.6 mm walls, a 1.6 mm floor, and a 2.0 mm lid. Use M2 screws and 5 mm diameter corner posts. One USB-C cutout on the -X wall: a rectangle 9.5 mm wide by 3.5 mm tall centered at y=15, z=8. No standoffs.",
+    "expected": {
+      "length": 50, "width": 30, "height": 18,
+      "wall": 1.6, "floor": 1.6, "lid_thickness": 2.0,
+      "screw": "M2", "post_diameter": 5,
+      "cutouts": [
+        {"kind": "rect", "face": "-x", "center": 15, "cz": 8, "width": 9.5, "height": 3.5}
+      ]
+    }
+  },
+  {
+    "id": "t5-sensor-node",
+    "request": "A sensor node enclosure, 70 mm by 70 mm by 25 mm tall outside, default walls, floor, lid, and M3 screws, but a tighter lid fit clearance of 0.15 mm. One M2.5 standoff 5 mm tall in the center at (35, 35). Two 10 mm diameter round holes: one on the +X wall centered at y=35, z=12, one on the +Y wall centered at x=35, z=12.",
+    "expected": {
+      "length": 70, "width": 70, "height": 25,
+      "fit_clearance": 0.15,
+      "standoffs": [{"x": 35, "y": 35, "height": 5, "screw": "M2.5"}],
+      "cutouts": [
+        {"kind": "circle", "face": "+x", "center": 35, "cz": 12, "diameter": 10},
+        {"kind": "circle", "face": "+y", "center": 35, "cz": 12, "diameter": 10}
+      ]
+    }
+  },
+  {
+    "id": "t6-relay-box",
+    "request": "A relay box 100 mm long, 60 mm wide, 40 mm tall outside, with 3 mm walls, a 3 mm floor, and a 3 mm lid. M3 screws on 8 mm diameter corner posts. A rectangular opening on the -Y wall, 30 mm wide by 15 mm tall, centered at x=50, z=20. Two M3 standoffs 10 mm tall at (30, 30) and (70, 30).",
+    "expected": {
+      "length": 100, "width": 60, "height": 40,
+      "wall": 3, "floor": 3, "lid_thickness": 3,
+      "post_diameter": 8,
+      "standoffs": [
+        {"x": 30, "y": 30, "height": 10, "screw": "M3"},
+        {"x": 70, "y": 30, "height": 10, "screw": "M3"}
+      ],
+      "cutouts": [
+        {"kind": "rect", "face": "-y", "center": 50, "cz": 20, "width": 30, "height": 15}
+      ]
+    }
+  },
+  {
+    "id": "t7-flat-tray",
+    "request": "A flat electronics tray, 90 mm by 90 mm by 15 mm tall outside, default 2 mm walls and floor and 2.4 mm lid, M3 screws. Four M2 standoffs 4 mm tall at (20, 20), (70, 20), (70, 70), and (20, 70). No cutouts.",
+    "expected": {
+      "length": 90, "width": 90, "height": 15,
+      "standoffs": [
+        {"x": 20, "y": 20, "height": 4, "screw": "M2"},
+        {"x": 70, "y": 20, "height": 4, "screw": "M2"},
+        {"x": 70, "y": 70, "height": 4, "screw": "M2"},
+        {"x": 20, "y": 70, "height": 4, "screw": "M2"}
+      ]
+    }
+  },
+  {
+    "id": "t8-tall-tower",
+    "request": "A tall tower enclosure, 45 mm long, 45 mm wide, 60 mm tall outside, with default walls, floor, lid, and M3 screws. Two 6 mm diameter round holes: one on the +X wall centered at y=22.5, z=50, and one on the -X wall centered at y=22.5, z=10. No standoffs.",
+    "expected": {
+      "length": 45, "width": 45, "height": 60,
+      "cutouts": [
+        {"kind": "circle", "face": "+x", "center": 22.5, "cz": 50, "diameter": 6},
+        {"kind": "circle", "face": "-x", "center": 22.5, "cz": 10, "diameter": 6}
+      ]
+    }
+  }
+]

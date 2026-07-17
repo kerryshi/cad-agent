@@ -23,7 +23,7 @@ from toolchain.spec import (
     Face,
 )
 
-Sabotage = Literal["thin_wall", "misplaced_standoff", "undersized_cutout"]
+Sabotage = Literal["thin_wall", "misplaced_standoff", "undersized_cutout", "missing_post"]
 
 # cut tools overshoot faces by this much so booleans are never coincident
 FUDGE = 1.0
@@ -40,7 +40,9 @@ def build_body(spec: EnclosureSpec, sabotage: Sabotage | None = None):
     body = _box(0, 0, 0, L, W, H)
     body = body.cut(_box(wall, wall, spec.floor, L - wall, W - wall, H + FUDGE))
 
-    for px, py in spec.post_centers():
+    for j, (px, py) in enumerate(spec.post_centers()):
+        if sabotage == "missing_post" and j == 0:
+            continue
         post = Solid.makeCylinder(
             spec.post_diameter / 2, spec.post_top_z - spec.floor,
             Vector(px, py, spec.floor), Vector(0, 0, 1),
