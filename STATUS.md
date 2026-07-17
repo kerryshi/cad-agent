@@ -1,10 +1,18 @@
 # cad-agent — STATUS
 
 **Where we are:** Phases A (toolchain) and B (harness) complete. Phase C:
-renderer DONE (VTK offscreen, validated); VLM critique built but shelved on an
-honest negative result (see below). Phase D part 1 DONE: headless OrcaSlicer
-slice check working with bundled P2S profiles. First golden column recorded
-(llama3.1:8b: extract 5/8, codegen 0/8).
+renderer DONE; VLM critique shelved on an honest negative result (see below).
+Phase D part 1 DONE: headless OrcaSlicer slice check with bundled P2S
+profiles. **Golden benchmark headline (2026-07-17):**
+
+| backend | extract | codegen |
+|---|---|---|
+| ollama:llama3.1:8b | 5/8 | 0/8 (all hit the 3-iter cap) |
+| claude-code:sonnet | **8/8** | **8/8 (every task iter=1)** |
+
+Same tasks, same sandbox, same verifier — the pass-rate gap is the artifact.
+Sonnet runs via the `claude -p` adapter on the Max plan (no API key needed).
+Its t1 part renders visually identical to the reference builder's output.
 
 **What this is:** English request → parametric CAD (CadQuery) → deterministic
 verification → (later) slice check → print on the Bambu P2S. v1 vertical:
@@ -67,24 +75,26 @@ qwen3:4b, qwen2.5vl:7b).
   (`qwen2.5-coder:14b`) is worth one later run.
 
 **BLOCKED on Kerry:**
-1. **Anthropic golden column** — no API credentials on this machine (no
-   `ANTHROPIC_API_KEY`, no `ant auth login` profile; Claude Code's own login
-   is not visible to the SDK). Set a key or run `ant auth login`, then:
-   `python -m harness.golden --backend anthropic` (defaults to Haiku per the
-   budget decision; `--model claude-opus-4-8` for the comparison run).
-2. **Printer spike** — put the P2S in LAN-only + Developer Mode, note IP +
+1. **Printer spike** — put the P2S in LAN-only + Developer Mode, note IP +
    access code. Then run the Phase-0 spike in a parallel session.
 
+**No longer blocked:** the frontier column no longer needs an API key — the
+`claude-code` backend runs on the Max plan (`python -m harness.golden
+--backend claude-code --model sonnet|opus|haiku`). The `anthropic` API backend
+remains for if/when a key exists (also the path to Claude-vision critique,
+though `claude -p` can Read PNGs and may cover that too — untested).
+
 **Next actions:**
-1. Anthropic golden run once credentials exist (see BLOCKED) — the headline
-   comparison column. Consider one `qwen2.5-coder:14b` run as a fairer local
-   baseline.
+1. **First physical print** — an agent-generated, verified part now exists
+   (e.g. `out/golden/claude-code-sonnet/t1-pi-hat-box/iter1/`). Slice via
+   slicecheck, print manually via Bambu Studio, measure lid fit vs spec
+   (fit_clearance=0.2 is a guess until measured).
 2. Wire slicecheck into the golden runner as a printability column (verify
    remains the gate; slice stats are reporting).
-3. First physical print: pick a verified part, print manually via the P2S,
-   measure lid fit vs spec (fit_clearance=0.2 is a guess until measured).
+3. Optional fairness column: `qwen2.5-coder:14b` (code-tuned local model);
+   optional `--model haiku` / `opus` claude-code rows.
 4. Printer spike in a parallel session once Developer Mode is on (BLOCKED).
-5. Revisit VLM critique with Claude vision (same credentials as #1).
+5. Revisit VLM critique via `claude -p` with Read access to the render PNGs.
 
 **Open questions:** verify's oracles assume cooperative codegen (documented in
 verify.py); cutout checks cross-talk with wall defects (observed, harmless).

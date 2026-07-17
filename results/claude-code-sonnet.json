@@ -1,0 +1,135 @@
+{
+  "backend": "claude-code:sonnet",
+  "stage": "both",
+  "max_iterations": 3,
+  "rows": [
+    {
+      "id": "t1-pi-hat-box",
+      "extract": {
+        "ok": true,
+        "parsed": true,
+        "attempts": 1,
+        "seconds": 9.2,
+        "error": ""
+      },
+      "codegen": {
+        "ok": true,
+        "iterations": 1,
+        "seconds": 217.8,
+        "failures_last": []
+      }
+    },
+    {
+      "id": "t2-minimal-box",
+      "extract": {
+        "ok": true,
+        "parsed": true,
+        "attempts": 1,
+        "seconds": 4.0,
+        "error": ""
+      },
+      "codegen": {
+        "ok": true,
+        "iterations": 1,
+        "seconds": 203.0,
+        "failures_last": []
+      }
+    },
+    {
+      "id": "t3-big-controller",
+      "extract": {
+        "ok": true,
+        "parsed": true,
+        "attempts": 1,
+        "seconds": 8.8,
+        "error": ""
+      },
+      "codegen": {
+        "ok": true,
+        "iterations": 1,
+        "seconds": 342.5,
+        "failures_last": []
+      }
+    },
+    {
+      "id": "t4-usbc-dongle",
+      "extract": {
+        "ok": true,
+        "parsed": true,
+        "attempts": 1,
+        "seconds": 7.3,
+        "error": ""
+      },
+      "codegen": {
+        "ok": true,
+        "iterations": 1,
+        "seconds": 224.9,
+        "failures_last": []
+      }
+    },
+    {
+      "id": "t5-sensor-node",
+      "extract": {
+        "ok": true,
+        "parsed": true,
+        "attempts": 1,
+        "seconds": 13.8,
+        "error": ""
+      },
+      "codegen": {
+        "ok": true,
+        "iterations": 1,
+        "seconds": 101.4,
+        "failures_last": []
+      }
+    },
+    {
+      "id": "t6-relay-box",
+      "extract": {
+        "ok": true,
+        "parsed": true,
+        "attempts": 1,
+        "seconds": 8.0,
+        "error": ""
+      },
+      "codegen": {
+        "ok": true,
+        "iterations": 1,
+        "seconds": 137.5,
+        "failures_last": []
+      }
+    },
+    {
+      "id": "t7-flat-tray",
+      "extract": {
+        "ok": true,
+        "parsed": true,
+        "attempts": 1,
+        "seconds": 12.4,
+        "error": ""
+      },
+      "codegen": {
+        "ok": true,
+        "iterations": 1,
+        "seconds": 137.3,
+        "failures_last": []
+      }
+    },
+    {
+      "id": "t8-tall-tower",
+      "extract": {
+        "ok": true,
+        "parsed": true,
+        "attempts": 1,
+        "seconds": 7.5,
+        "error": ""
+      },
+      "codegen": {
+        "ok": true,
+        "iterations": 1,
+        "seconds": 163.3,
+        "failures_last": []
+      }
+    }
+  ]
+}
