@@ -33,7 +33,9 @@ ORCA_EXE = Path(os.environ.get(
 PROFILE_DIR = ORCA_EXE.parent / "resources" / "profiles" / "BBL"
 MACHINE = "Bambu Lab P2S 0.4 nozzle.json"
 PROCESS = "0.20mm Standard @BBL P2S.json"
-FILAMENT = "Bambu PLA Basic @BBL P2S.json"
+# Kerry prints Bambu PETG Basic (2026-07-17); override per-run if needed
+FILAMENT = os.environ.get(
+    "CAD_AGENT_FILAMENT", "Bambu PETG Basic @BBL P2S 0.4 nozzle.json")
 
 
 @dataclass
