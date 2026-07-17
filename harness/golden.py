@@ -19,6 +19,7 @@ from pathlib import Path
 from harness.backends import get_backend
 from harness.loop import extract_spec, generate_part
 from toolchain.families import get_family
+from toolchain.slicecheck import orca_available, slice_workdir
 
 ROOT = Path(__file__).parent.parent
 
@@ -102,6 +103,21 @@ def main(argv: list[str] | None = None) -> int:
             print(f"[{task['id']}] codegen: {'PASS' if cr.ok else 'FAIL'} "
                   f"iter={cr.iterations} ({row['codegen']['seconds']}s)", flush=True)
 
+            # printability column: slice the verified part(s); reporting only,
+            # verify remains the gate
+            if cr.ok and orca_available():
+                parts = tuple((f, f.split(".")[0]) for f in fam.output_files)
+                workdir = workroot / task["id"] / f"iter{cr.iterations}"
+                row["slice"] = [
+                    {"part": s.part, "ok": s.ok, "minutes": s.minutes,
+                     "layers": s.layers, "cm3": s.filament_cm3}
+                    for s in slice_workdir(workdir, parts=parts)
+                ]
+                summary = ", ".join(
+                    f"{s['part']} {s['minutes']}min" if s["ok"] else f"{s['part']} FAIL"
+                    for s in row["slice"])
+                print(f"[{task['id']}] slice: {summary}", flush=True)
+
         rows.append(row)
 
     out = {"backend": backend.name, "stage": args.stage,
@@ -110,8 +126,8 @@ def main(argv: list[str] | None = None) -> int:
     out_path.write_text(json.dumps(out, indent=2), encoding="utf-8")
 
     # markdown table
-    lines = [f"\n### {backend.name}", "", "| task | extract | codegen (iters) |",
-             "|---|---|---|"]
+    lines = [f"\n### {backend.name}", "",
+             "| task | extract | codegen (iters) | slice |", "|---|---|---|---|"]
     ex_pass = cg_pass = 0
     for r in rows:
         ex = r.get("extract")
@@ -119,10 +135,14 @@ def main(argv: list[str] | None = None) -> int:
         ex_cell = "—" if ex is None else ("PASS" if ex["ok"] else "FAIL")
         cg_cell = "—" if cg is None else (
             f"{'PASS' if cg['ok'] else 'FAIL'} ({cg['iterations']})")
+        sl_cell = "—" if "slice" not in r else ", ".join(
+            f"{s['part']} {s['minutes']}min" if s["ok"] else f"{s['part']} FAIL"
+            for s in r["slice"])
         ex_pass += bool(ex and ex["ok"])
         cg_pass += bool(cg and cg["ok"])
-        lines.append(f"| {r['id']} | {ex_cell} | {cg_cell} |")
-    lines.append(f"| **total** | **{ex_pass}/{len(rows)}** | **{cg_pass}/{len(rows)}** |")
+        lines.append(f"| {r['id']} | {ex_cell} | {cg_cell} | {sl_cell} |")
+    lines.append(
+        f"| **total** | **{ex_pass}/{len(rows)}** | **{cg_pass}/{len(rows)}** | |")
     print("\n".join(lines))
     print(f"\nresults written to {out_path}")
     return 0
