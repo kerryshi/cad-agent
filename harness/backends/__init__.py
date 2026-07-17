@@ -25,4 +25,8 @@ def get_backend(kind: str, model: str | None = None) -> Backend:
         from harness.backends.ollama_backend import OllamaBackend
 
         return OllamaBackend(model=model) if model else OllamaBackend()
+    if kind == "claude-code":
+        from harness.backends.claude_code import ClaudeCodeBackend
+
+        return ClaudeCodeBackend(model=model) if model else ClaudeCodeBackend()
     raise ValueError(f"unknown backend kind: {kind}")

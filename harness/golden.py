@@ -44,7 +44,8 @@ def approx_equal(a, b, tol: float = 1e-6) -> bool:
 
 def main(argv: list[str] | None = None) -> int:
     p = argparse.ArgumentParser(description=__doc__)
-    p.add_argument("--backend", required=True, choices=["anthropic", "ollama"])
+    p.add_argument("--backend", required=True,
+                   choices=["anthropic", "ollama", "claude-code"])
     p.add_argument("--model", default=None)
     p.add_argument("--stage", default="both", choices=["extract", "codegen", "both"])
     p.add_argument("--limit", type=int, default=None)
