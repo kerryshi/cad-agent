@@ -1,0 +1,196 @@
+{
+  "backend": "ollama:llama3.1:8b",
+  "stage": "both",
+  "max_iterations": 3,
+  "rows": [
+    {
+      "id": "t1-pi-hat-box",
+      "extract": {
+        "ok": false,
+        "parsed": false,
+        "attempts": 2,
+        "seconds": 7.7,
+        "error": "11 validation errors for EnclosureSpec\nstandoffs.0.screw\n  Input should be 'M2', 'M2.5', 'M3' or 'M4' [type=enum, input_value='M2_5', input_type=str]\n    For further information visit https://errors.pydantic.dev/2.13/v/enum\nstandoffs.1.screw\n  Input should be 'M2', 'M2.5', 'M3' or 'M4' [type=enum, input_value='M2_5', input_type=str]\n    For further information visit https://errors.pydantic.dev/2.13/v/enum\ncutouts.0.RectCutout.face\n  Input should be '+x', '-x', '+y' or '-y' [type=enum, input_value='+X', input_type=str]\n    For further information visit https://errors.pydantic.dev/2.13/v/enum\ncutouts.0.CircleCutout.kind\n  Input should be 'circle' [type=literal_error, input_value='rect', input_type=str]\n    For further information visit https://errors.pydantic.dev/2.13/v/literal_error\ncutouts.0.CircleCutout.face\n  Input should be '+x', '-x', '+y' or '-y' [type=enum, input_value='+X', input_type=str]\n    For further information visit https://errors.pydantic.dev/2.13/v/enum\ncutouts.0.CircleCutout.diameter\n  Field required [type=missing, input_value={'kind': 'rect', 'face': ...width': 12, 'height': 8}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.13/v/missing\ncutouts.1.RectCutout.kind\n  Input should be 'rect' [type=literal_error, input_value='circle', input_type=str]\n    For further information visit https://errors.pydantic.dev/2.13/v/literal_error\ncutouts.1.RectCutout.face\n  Input should be '+x', '-x', '+y' or '-y' [type=enum, input_value='-Y', input_type=str]\n    For further information visit https://errors.pydantic.dev/2.13/v/enum\ncutouts.1.RectCutout.width\n  Field required [type=missing, input_value={'kind': 'circle', 'face'...'cz': 15, 'diameter': 8}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.13/v/missing\ncutouts.1.RectCutout.height\n  Field required [type=missing, input_value={'kind': 'circle', 'face'...'cz': 15, 'diameter': 8}, input_type=dict]\n    For further information visit https://errors"
+      },
+      "codegen": {
+        "ok": false,
+        "iterations": 3,
+        "seconds": 37.2,
+        "failures_last": [
+          "script exited 1",
+          "stderr (tail):",
+          "  File \"C:\\Users\\PC\\cad-agent\\out\\golden\\ollama-llama3_1-8b\\t1-pi-hat-box\\iter3\\gen_build.py\", line 155",
+          "    body STEP body_file",
+          "         ^^^^",
+          "SyntaxError: invalid syntax"
+        ]
+      }
+    },
+    {
+      "id": "t2-minimal-box",
+      "extract": {
+        "ok": true,
+        "parsed": true,
+        "attempts": 1,
+        "seconds": 1.2,
+        "error": ""
+      },
+      "codegen": {
+        "ok": false,
+        "iterations": 3,
+        "seconds": 23.5,
+        "failures_last": [
+          "script exited 1",
+          "stderr (tail):",
+          "  File \"C:\\Users\\PC\\cad-agent\\out\\golden\\ollama-llama3_1-8b\\t2-minimal-box\\iter3\\gen_build.py\", line 39",
+          "    .transformed(r=cq.Translation(s.x, s.y, 0), r=cq.Rotation(0, 0, 1, 90))",
+          "                                                ^^^^^^^^^^^^^^^^^^^^^^^^^^",
+          "SyntaxError: keyword argument repeated: r"
+        ]
+      }
+    },
+    {
+      "id": "t3-big-controller",
+      "extract": {
+        "ok": true,
+        "parsed": true,
+        "attempts": 1,
+        "seconds": 2.9,
+        "error": ""
+      },
+      "codegen": {
+        "ok": false,
+        "iterations": 3,
+        "seconds": 38.9,
+        "failures_last": [
+          "script exited 1",
+          "stderr (tail):",
+          "Traceback (most recent call last):",
+          "  File \"C:\\Users\\PC\\cad-agent\\out\\golden\\ollama-llama3_1-8b\\t3-big-controller\\iter3\\gen_build.py\", line 3, in <module>",
+          "    from cadquery import Workplane, makeCutAll, revolve, rotate",
+          "ImportError: cannot import name 'makeCutAll' from 'cadquery' (C:\\Users\\PC\\cad-agent\\.venv\\Lib\\site-packages\\cadquery\\__init__.py)"
+        ]
+      }
+    },
+    {
+      "id": "t4-usbc-dongle",
+      "extract": {
+        "ok": true,
+        "parsed": true,
+        "attempts": 1,
+        "seconds": 1.5,
+        "error": ""
+      },
+      "codegen": {
+        "ok": false,
+        "iterations": 3,
+        "seconds": 39.6,
+        "failures_last": [
+          "script exited 1",
+          "stderr (tail):",
+          "Traceback (most recent call last):",
+          "  File \"C:\\Users\\PC\\cad-agent\\out\\golden\\ollama-llama3_1-8b\\t4-usbc-dongle\\iter3\\gen_build.py\", line 5, in <module>",
+          "    from cadquery.operators.boolean import unionOp",
+          "ModuleNotFoundError: No module named 'cadquery.operators'"
+        ]
+      }
+    },
+    {
+      "id": "t5-sensor-node",
+      "extract": {
+        "ok": false,
+        "parsed": false,
+        "attempts": 2,
+        "seconds": 4.4,
+        "error": "10 validation errors for EnclosureSpec\ncutouts.0.RectCutout.face\n  Input should be '+x', '-x', '+y' or '-y' [type=enum, input_value='+X', input_type=str]\n    For further information visit https://errors.pydantic.dev/2.13/v/enum\ncutouts.0.RectCutout.height\n  Field required [type=missing, input_value={'kind': 'rect', 'face': ..., 'cz': 12, 'width': 10}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.13/v/missing\ncutouts.0.CircleCutout.kind\n  Input should be 'circle' [type=literal_error, input_value='rect', input_type=str]\n    For further information visit https://errors.pydantic.dev/2.13/v/literal_error\ncutouts.0.CircleCutout.face\n  Input should be '+x', '-x', '+y' or '-y' [type=enum, input_value='+X', input_type=str]\n    For further information visit https://errors.pydantic.dev/2.13/v/enum\ncutouts.0.CircleCutout.diameter\n  Field required [type=missing, input_value={'kind': 'rect', 'face': ..., 'cz': 12, 'width': 10}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.13/v/missing\ncutouts.1.RectCutout.kind\n  Input should be 'rect' [type=literal_error, input_value='circle', input_type=str]\n    For further information visit https://errors.pydantic.dev/2.13/v/literal_error\ncutouts.1.RectCutout.face\n  Input should be '+x', '-x', '+y' or '-y' [type=enum, input_value='+Y', input_type=str]\n    For further information visit https://errors.pydantic.dev/2.13/v/enum\ncutouts.1.RectCutout.width\n  Field required [type=missing, input_value={'kind': 'circle', 'face'...cz': 12, 'diameter': 10}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.13/v/missing\ncutouts.1.RectCutout.height\n  Field required [type=missing, input_value={'kind': 'circle', 'face'...cz': 12, 'diameter': 10}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.13/v/missing\ncutouts.1.CircleCutout.face\n  Input should be '+x', '-x', '+y' or '-y' [type=enum, input_value='+Y', input_type=str]\n    "
+      },
+      "codegen": {
+        "ok": false,
+        "iterations": 3,
+        "seconds": 32.7,
+        "failures_last": [
+          "script exited 1",
+          "stderr (tail):",
+          "Traceback (most recent call last):",
+          "  File \"C:\\Users\\PC\\cad-agent\\out\\golden\\ollama-llama3_1-8b\\t5-sensor-node\\iter3\\gen_build.py\", line 168, in <module>",
+          "    main()",
+          "  File \"C:\\Users\\PC\\cad-agent\\out\\golden\\ollama-llama3_1-8b\\t5-sensor-node\\iter3\\gen_build.py\", line 100, in main",
+          "    ).faces(\"<X\").color(\"blue\")",
+          "                  ^^^^^"
+        ]
+      }
+    },
+    {
+      "id": "t6-relay-box",
+      "extract": {
+        "ok": false,
+        "parsed": false,
+        "attempts": 2,
+        "seconds": 3.9,
+        "error": "4 validation errors for EnclosureSpec\ncutouts.0.RectCutout.face\n  Input should be '+x', '-x', '+y' or '-y' [type=enum, input_value='-Y', input_type=str]\n    For further information visit https://errors.pydantic.dev/2.13/v/enum\ncutouts.0.CircleCutout.kind\n  Input should be 'circle' [type=literal_error, input_value='rect', input_type=str]\n    For further information visit https://errors.pydantic.dev/2.13/v/literal_error\ncutouts.0.CircleCutout.face\n  Input should be '+x', '-x', '+y' or '-y' [type=enum, input_value='-Y', input_type=str]\n    For further information visit https://errors.pydantic.dev/2.13/v/enum\ncutouts.0.CircleCutout.diameter\n  Field required [type=missing, input_value={'kind': 'rect', 'face': ...idth': 30, 'height': 15}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.13/v/missing"
+      },
+      "codegen": {
+        "ok": false,
+        "iterations": 3,
+        "seconds": 29.3,
+        "failures_last": [
+          "script exited 1",
+          "stderr (tail):",
+          "Traceback (most recent call last):",
+          "  File \"C:\\Users\\PC\\cad-agent\\out\\golden\\ollama-llama3_1-8b\\t6-relay-box\\iter3\\gen_build.py\", line 84, in <module>",
+          "    main()",
+          "  File \"C:\\Users\\PC\\cad-agent\\out\\golden\\ollama-llama3_1-8b\\t6-relay-box\\iter3\\gen_build.py\", line 76, in main",
+          "    body = generate_body(spec)",
+          "           ^^^^^^^^^^^^^^^^^^^"
+        ]
+      }
+    },
+    {
+      "id": "t7-flat-tray",
+      "extract": {
+        "ok": true,
+        "parsed": true,
+        "attempts": 1,
+        "seconds": 2.2,
+        "error": ""
+      },
+      "codegen": {
+        "ok": false,
+        "iterations": 3,
+        "seconds": 36.7,
+        "failures_last": [
+          "script exited 1",
+          "stderr (tail):",
+          "Traceback (most recent call last):",
+          "  File \"C:\\Users\\PC\\cad-agent\\out\\golden\\ollama-llama3_1-8b\\t7-flat-tray\\iter3\\gen_build.py\", line 18, in <module>",
+          "    class EnclosureSpec(BaseModel):",
+          "                        ^^^^^^^^^",
+          "NameError: name 'BaseModel' is not defined"
+        ]
+      }
+    },
+    {
+      "id": "t8-tall-tower",
+      "extract": {
+        "ok": true,
+        "parsed": true,
+        "attempts": 1,
+        "seconds": 1.9,
+        "error": ""
+      },
+      "codegen": {
+        "ok": false,
+        "iterations": 3,
+        "seconds": 37.6,
+        "failures_last": [
+          "script exited 1",
+          "stderr (tail):",
+          "Traceback (most recent call last):",
+          "  File \"C:\\Users\\PC\\cad-agent\\out\\golden\\ollama-llama3_1-8b\\t8-tall-tower\\iter3\\gen_build.py\", line 2, in <module>",
+          "    from cqparts import Exporter",
+          "ModuleNotFoundError: No module named 'cqparts'"
+        ]
+      }
+    }
+  ]
+}
