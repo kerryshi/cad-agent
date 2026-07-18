@@ -14,6 +14,16 @@ Same tasks, same sandbox, same verifier — the pass-rate gap is the artifact.
 Sonnet runs via the `claude -p` adapter on the Max plan (no API key needed).
 Its t1 part renders visually identical to the reference builder's output.
 
+**Partial Haiku column (2026-07-17, run stopped externally before finishing —
+results JSON not written):** claude-code:haiku failed enclosure codegen on
+t1–t4 at the 3-iteration cap while extraction kept passing. The t2 iteration
+trace shows the loop working but the model unable to close: iter1 failed
+bbox+posts+lid+interference, iter2 fixed all but posts, iter3 regressed to an
+unloadable STEP. Resume with: `python -m harness.golden --backend claude-code
+--model haiku` (and `--tasks golden/frame_tasks.json`). qwen2.5-coder:14b runs
+(timeout fixed to 900s, commit f-series) also stopped before completing —
+same resume commands with `--backend ollama --model qwen2.5-coder:14b`.
+
 **v2 family shipped (2026-07-17): drone frames.** Flat X-quad plate —
 FrameSpec (wheelbase, FC/motor mount pattern enums, prop-collision
 validation), reference builder + 3 sabotages, spec-derived frame verifier,
