@@ -1,5 +1,35 @@
 # cad-agent — STATUS
 
+**CI gate (installed 2026-07-19, CI/CD PRD WS4):** merge gate + slicecheck
+skip guard, all local (no remote by choice — pre-push can never fire here).
+- **Mechanism:** `.githooks/pre-merge-commit` runs
+  `./.venv/Scripts/python.exe -m pytest tests/ -q` (refuse-over-skip if the
+  venv is missing). Suite measured **27.1s** (2026-07-19) — over the PRD's
+  10s pre-commit budget, so per rule 7 the suite gates **merges**, not every
+  commit (recorded decision, not a skip). `.githooks/pre-commit` is the
+  merge-completion guard: MERGE_HEAD or `.git/SQUASH_MSG` present → re-runs
+  the full merge gate; plain commits pass instantly.
+- **Skip guard:** `tests/conftest.py` turns ANY skipped test in
+  `tests/test_slicecheck.py` into pytest exit 1 with a named
+  "SKIP-GUARD REFUSAL" ("a skip is not a pass" made mechanical). Other
+  modules' skips keep normal semantics.
+- **Install (per-clone, re-run after any fresh clone):**
+  `git config core.hooksPath .githooks && git config merge.ff false`; exec
+  bit is in the index; `.gitattributes` pins LF on hooks.
+- **Landing discipline:** work lands on main via **non-ff merge** so the
+  gate fires. Direct commits to main are a NAMED SIDE DOOR (they run only
+  the instant pre-commit guard); other accepted holes: `--no-verify`,
+  rebase/cherry-pick run no hooks. Golden benchmark stays **manual** —
+  hours-scale, needs LLM backends; the gate never invokes `harness.golden`.
+- **Refuse-first evidence (2026-07-19, scratch proof-base branch, all
+  cleaned up):** planted red → merge refused exit 1, HEAD unmoved
+  (c4c73fc before/after); `git commit` completing the refused merge also
+  blocked exit 1; `CAD_AGENT_ORCA=C:/bogus` → SKIP-GUARD refused the merge
+  exit 1, HEAD unmoved; clean green merge landed (23.8s); stripped-env
+  (`env -i`) merge completion ran the full gate green via absolute paths —
+  finding: Windows Python needs `USERPROFILE` (cadquery's `Path.home()`),
+  not just `HOME`. GUI-client (VS Code) commit not yet exercised — named gap.
+
 **Where we are:** Phases A (toolchain) and B (harness) complete. Phase C:
 renderer DONE; VLM critique shelved on an honest negative result (see below).
 Phase D part 1 DONE: headless OrcaSlicer slice check with bundled P2S
@@ -123,4 +153,4 @@ though `claude -p` can Read PNGs and may cover that too — untested).
 **Open questions:** verify's oracles assume cooperative codegen (documented in
 verify.py); cutout checks cross-talk with wall defects (observed, harmless).
 
-**Last updated:** 2026-07-17 (session: Phase B build + first golden run).
+**Last updated:** 2026-07-19 (merge gate + skip guard installed, refuse-first proven; prior: 2026-07-17 Phase B build + first golden run).
