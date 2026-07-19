@@ -7,3 +7,4 @@ prints/
 *.stl
 *.step
 !golden/**/*.step
+00000.log

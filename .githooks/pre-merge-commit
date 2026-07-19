@@ -1,0 +1,27 @@
+#!/bin/sh
+# cad-agent merge gate: full pytest suite.
+# Measured 2026-07-19: 27.1s — over the 10s pre-commit budget, so per the
+# CI/CD PRD rule 7 the suite gates the MERGE, not every commit. Landing
+# discipline: work lands on main via non-ff merge (merge.ff=false); direct
+# commits to main are a named side door recorded in STATUS.md.
+# Refuse-over-skip: missing venv = named refusal, never a silent pass.
+# tests/conftest.py additionally turns any slicecheck skip into a hard fail.
+
+REPO="C:/Users/PC/cad-agent"
+PY="$REPO/.venv/Scripts/python.exe"
+
+cd "$REPO" || { echo "cad-agent merge gate REFUSED: cannot cd to $REPO"; exit 1; }
+
+if [ ! -x "$PY" ]; then
+    echo "cad-agent merge gate REFUSED: venv python missing at $PY"
+    echo "(create .venv with 'py -3.12 -m venv .venv' per CLAUDE.md; refuse-over-skip)"
+    exit 1
+fi
+
+"$PY" -m pytest tests/ -q
+status=$?
+if [ "$status" -ne 0 ]; then
+    echo "cad-agent merge gate REFUSED: pytest exit $status - merge blocked"
+    exit "$status"
+fi
+exit 0

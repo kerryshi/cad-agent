@@ -1,0 +1,19 @@
+#!/bin/sh
+# Merge-completion guard. A refused merge leaves the merge staged and git
+# itself prints the bypass ('git commit' completes it having run only
+# pre-commit); squash merges write .git/SQUASH_MSG and never MERGE_HEAD.
+# Either state re-runs the full merge gate here. Plain commits pass
+# immediately — the suite (27s) gates merges, not every commit.
+
+REPO="C:/Users/PC/cad-agent"
+cd "$REPO" || { echo "cad-agent pre-commit REFUSED: cannot cd to $REPO"; exit 1; }
+
+GITDIR=$(git rev-parse --git-dir) || {
+    echo "cad-agent pre-commit REFUSED: not a git repo?"; exit 1;
+}
+
+if git rev-parse -q --verify MERGE_HEAD >/dev/null || [ -f "$GITDIR/SQUASH_MSG" ]; then
+    echo "cad-agent pre-commit: merge completion detected - re-running merge gate"
+    exec "$REPO/.githooks/pre-merge-commit"
+fi
+exit 0
