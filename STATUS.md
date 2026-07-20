@@ -179,9 +179,58 @@ qwen3:4b, qwen2.5vl:7b).
   `results/ollama-llama3_1-8b.json`. A code-tuned local model
   (`qwen2.5-coder:14b`) is worth one later run.
 
+**PRINTER SPIKE — Phase 0 part 1 DONE (2026-07-20).** Kerry enabled LAN-only +
+Developer Mode (supersedes the 07-19 publish-month bar) and supplied IP +
+access code + serial. `printleg/` now has `probe.py` (read-only status),
+`preflight.py` (physical-state gate), `ftps.py` (implicit-FTPS client).
+Credentials live in `printleg/printer.env` — GITIGNORED, never commit.
+
+**P2S hardware/protocol findings (all measured, all cost time):**
+- **The P2S has NO SD card slot — it takes a USB-A drive.** Assumed P1/X1
+  microSD from P-series convention and argued it twice before checking Bambu's
+  own P2S docs; Kerry was right both times. The MQTT field is still named
+  `sdcard` and reports USB state on this model — a legacy name that actively
+  misleads. Don't "fix" the preflight check back to match it.
+- **Drive must be FAT32 or exFAT.** Kerry's stick was a Media Creation Tool
+  Windows installer in **NTFS**, which the printer cannot mount, so it read as
+  no-storage-at-all. Symptom set: `553 Could not create file` on every STOR
+  path, `MKD` refused, `/` lists empty, `sdcard: False`. All four are one cause
+  and none of them names it. Resolved by backing up the installer
+  (`C:\Users\PC\usb-backup-win10-installer`, 908 files / 4.450 GB, verified),
+  reformatting FAT32, restoring it (install.esd is 3.78 GB, under FAT32's 4 GB
+  cap, so it still works as a UEFI installer) and adding the print file.
+- **FTPS needs two non-obvious things** (both in `printleg/ftps.py`): implicit
+  TLS on :990 (ftplib only does explicit, so it won't connect), and **TLS
+  session reuse** — vsftpd runs `require_ssl_reuse`, so the data channel must
+  resume the control session or every transfer dies with `522 SSL connection
+  failed: session reuse required`. Tell: **login succeeds and all directory ops
+  fail**, which reads like permissions and isn't. bambulabs_api's own
+  `upload_file()` almost certainly hits this — prefer our client.
+- **bambulabs_api 2.6.6 mis-reads this model.** Loaded filament lives in
+  `print.vir_slot[]`, NOT `vt_tray` (empty dict) and NOT the AMS `tray[]`
+  records; the library reads none of them, so it reported "no filament" while
+  PETG sat loaded. `nozzle_type` is `HS01` (hardened steel) and raises
+  ValueError from the library's enum; `get_current_state()` returns UNKNOWN.
+  Raw payload has it all — read `mqtt_dump()`, don't fight the getters.
+- **MQTT sends partial deltas.** A key absent from one payload is NOT absent
+  state. Always `pushall()` and settle before reading, or a check passes on a
+  message that never mentioned the field. Bit once mid-session.
+- **`start_print` defaults to `use_ams=True, ams_mapping=[0]`** — wrong here:
+  the PETG is on the external spool and all four AMS trays are empty, so the
+  default maps the job to an empty tray. Needs `use_ams=False`.
+
+**OPEN — the question that decides the auto-print leg:** every write command so
+far returns True and does nothing. The chamber light would not toggle via raw
+gcode (`M960 S5 P0`) OR the library's `turn_light_off()`, verified against
+fresh `pushall` state, while reads work flawlessly. `start_print` uses that
+same channel. Could be the absent storage; could be N7 protocol. **Untested
+until a FAT32 drive is in the printer** — that is the next action, and the
+light toggle is the one-second test that forks the project.
+
 **BLOCKED on Kerry:**
-1. **Printer spike** — put the P2S in LAN-only + Developer Mode, note IP +
-   access code. Then run the Phase-0 spike in a parallel session.
+1. **Move the prepared USB stick from this PC into the printer** (still
+   showing as `E: BAMBU` on the desktop as of 2026-07-20 01:20). Then the light
+   toggle, and the first physical print of f2 from the touchscreen.
 
 **No longer blocked:** the frontier column no longer needs an API key — the
 `claude-code` backend runs on the Max plan (`python -m harness.golden

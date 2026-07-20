@@ -8,3 +8,7 @@ prints/
 *.step
 !golden/**/*.step
 00000.log
+
+# printer credentials — never commit
+printleg/*.env
+printleg/printer.json
