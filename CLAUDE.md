@@ -13,7 +13,14 @@ session.
   a UAC prompt background shells can't show and fails silently.
 - Orca CLI quirks are documented in `toolchain/slicecheck.py` — read them
   before touching slicer invocations.
-- Filament default is Bambu PETG Basic (`CAD_AGENT_FILAMENT` overrides).
+- **The Orca CLI cannot resolve `inherits` in this build.** It looks for
+  parents in `profiles/BBL/*_full/`, which the portable build does not ship,
+  so it silently drops every parent key (it once produced PETG gcode with a
+  35 °C bed). Never hand it a raw profile path — go through
+  `toolchain/profiles.py`, which flattens the chain first. No CLI flag fixes
+  this; see that module's docstring.
+- Filament default is Bambu PETG Basic (`CAD_AGENT_FILAMENT` overrides);
+  bed default is Textured PEI Plate (`CAD_AGENT_BED`).
 
 ## Design invariants (do not weaken)
 - The codegen agent NEVER sees or writes verification code. Verifiers derive
