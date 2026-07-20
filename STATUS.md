@@ -62,11 +62,62 @@ prompts/loop/golden. Frame golden run, claude-code:sonnet: **4/4 extract,
 4/4 codegen, all iter=1** (`results/claude-code-sonnet--frame_tasks.json`).
 
 **PRINT FILES STAGED for Kerry** (gitignored, `prints/`): agent-generated,
-probe-verified, PETG-sliced —
-- `prints/f1-5inch-freestyle/` — 63 min, 25 layers, 20.4 cm³ PETG
-- `prints/f2-3inch-micro/` — 44 min, 20 layers, 10.8 cm³ PETG
-Each has the `.3mf` (open in Bambu Studio → print), raw gcode, and renders.
+probe-verified, PETG-sliced, **re-staged 2026-07-19** after the profile-
+inheritance defect below invalidated the 07-17 batch —
+- `prints/f1-5inch-freestyle/` — 62.1 min, 25 layers, 21.7 cm³ PETG
+- `prints/f2-3inch-micro/` — 39.5 min, 20 layers, 10.8 cm³ PETG
+Each has `<name>.gcode.3mf`, raw gcode, and renders. **To print: copy the
+`.gcode.3mf` to the microSD, print from the touchscreen.** Bambu Studio is NOT
+installed on this machine (the 07-17 note said to use it — wrong); OrcaSlicer
+portable is the only slicer here. Re-stage any part with
+`python -m toolchain.slicecheck <part.step> <dest-dir> --part <name>`.
 After printing: check hole fit (M3/M2 screws), plate flatness, arm stiffness.
+
+**DEFECT FOUND + FIXED (2026-07-19): OrcaSlicer's CLI ignores `inherits`.**
+`--load-settings` / `--load-filaments` apply only keys literally present in
+the leaf JSON; every parent key silently falls back to the slicer's own
+default. Nothing is logged and the slice succeeds. Measured on the PETG chain
+(3 deep): `filament_type` PETG→**PLA**, plate temps 70→**45/35**,
+`printable_area` 256×256→**200×200**. The two frames staged 07-17 therefore
+carried `M140 S35` — a 35 °C bed for PETG, i.e. first-layer release — while
+`slice_stl` reported ok=True with plausible time/layer/volume stats. Nozzle
+temp came out right (250 °C, a leaf key), which is what made it look sane.
+- **Fix:** `toolchain/profiles.py` flattens the chain before invoking the CLI
+  (refuses on a missing parent rather than emitting a partial profile).
+- **Gate:** `slicecheck.check_thermal` refuses any slice whose gcode
+  `filament_type` or bed temp disagrees with the resolved profile — both
+  expectations derived from the chain, no literals. This is the check whose
+  absence let a cold-bed slice pass as green.
+- **Also fixed:** `curr_bed_type` is now set explicitly (Textured PEI Plate,
+  the P2S factory default per its `machine_model` descriptor; `CAD_AGENT_BED`
+  overrides), and `printer_model_id` — left empty by the CLI because it lives
+  in a descriptor the CLI never loads — is patched into the staged 3mf from
+  the descriptor (`N7` for the P2S), gcode payload copied byte-for-byte so the
+  md5 sidecar stays valid.
+- **Fail-first evidence:** the new thermal tests fail on the pre-fix
+  invocation with `asked for PETG, gcode says PLA`; sabotage cases (wrong
+  `filament_type`, 35 °C bed, cold first layer) are each refused by the
+  owning check. Notably, once inheritance resolved, OrcaSlicer's *own*
+  validator started refusing the unconfigured case — `Plate 1: Cool Plate
+  does not support filament 1` — which the bogus 35 °C default had masked.
+- **Review caught a blocker in the first cut (fixed).** The bed gate read one
+  temperature via `max()` over the body. That (a) false-refused any stock
+  profile whose initial and steady temps differ — `Bambu PLA Translucent` is
+  60 then 55, and under `CAD_AGENT_FILAMENT` the suite went 7-failed — and
+  (b) **accepted a 35 °C first layer under a correct 70 °C steady bed**, the
+  exact adhesion failure the gate exists to stop. PETG hides it because its
+  initial and steady are both 70. Now parsed and gated as two values, plus
+  peak nozzle temp. Proof: old parser `ACCEPTED (hole)`, new parser
+  `REFUSED: bed temp (first layer) 35C, profile specifies 60C`.
+- **Mechanism correction:** the CLI does *not* "ignore" `inherits` — it
+  resolves against `profiles/BBL/*_full/` dirs the portable build doesn't
+  ship, so lookup fails and degrades quietly. No flag fixes it. (The first
+  write-up said "ignored", which would send the next reader hunting for a
+  flag that doesn't exist.)
+- **Not verified:** nothing has been printed yet. The gate proves the gcode is
+  thermally coherent with the profile, not that the part comes out good.
+  Whether the printer accepts the rewritten zip is untestable without the
+  hardware.
 
 **What this is:** English request → parametric CAD (CadQuery) → deterministic
 verification → (later) slice check → print on the Bambu P2S. v1 vertical:
@@ -139,10 +190,11 @@ remains for if/when a key exists (also the path to Claude-vision critique,
 though `claude -p` can Read PNGs and may cover that too — untested).
 
 **Next actions:**
-1. **First physical print** — an agent-generated, verified part now exists
-   (e.g. `out/golden/claude-code-sonnet/t1-pi-hat-box/iter1/`). Slice via
-   slicecheck, print manually via Bambu Studio, measure lid fit vs spec
-   (fit_clearance=0.2 is a guess until measured).
+1. **First physical print** — `prints/f2-3inch-micro/` is the cheaper first
+   run (39.5 min, 10.8 cm³). microSD → touchscreen. Confirm the Textured PEI
+   plate is installed and PETG is loaded before starting. Then measure hole
+   fit vs spec (fit_clearance=0.2 is a guess until measured) and report back —
+   the thermal gate proves profile coherence, not print quality.
 2. Wire slicecheck into the golden runner as a printability column (verify
    remains the gate; slice stats are reporting).
 3. Optional fairness column: `qwen2.5-coder:14b` (code-tuned local model);
