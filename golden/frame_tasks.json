@@ -34,5 +34,14 @@
       "wheelbase": 300, "plate_thickness": 6, "arm_width": 16, "body_width": 44,
       "fc_mount": "30.5x30.5-M3", "motor_mount": "19x19-M3", "prop_size_inch": 7
     }
+  },
+  {
+    "id": "f5-3inch-25mount",
+    "family": "frame",
+    "request": "A 3-inch micro quad frame plate: 140 mm wheelbase, 4 mm thick plate, 12 mm wide arms, 36 mm square body, 25.5x25.5 M2 flight controller mount, 12x12 M2 motor mounts, for 3 inch props.",
+    "expected": {
+      "wheelbase": 140, "plate_thickness": 4, "arm_width": 12, "body_width": 36,
+      "fc_mount": "25.5x25.5-M2", "motor_mount": "12x12-M2", "prop_size_inch": 3
+    }
   }
 ]
