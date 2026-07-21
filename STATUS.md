@@ -311,14 +311,22 @@ the same channel, so the auto-print leg stays blocked until the light
 toggles. Evidence: scratchpad fork_test.py run 2026-07-21; preflight module
 output in the run log.
 
-**BLOCKED on Kerry (updated 2026-07-21):**
-1. **Press print**: everything physical is green — touchscreen → files →
-   `f2-3inch-micro.gcode.3mf` (39.5 min PETG). Confirm the Textured PEI
-   plate is installed first (preflight cannot read plate type).
-2. **While at the printer: verify LAN-only + Developer Mode are actually ON
-   in settings** (and note firmware version). If Developer Mode was off or
-   reset, re-enable + reboot, then the light toggle re-test decides the
-   auto-print leg.
+**FIRST PHYSICAL PRINT COMPLETE (2026-07-21):** f2-3inch-micro ran to
+FINISH — `subtask_name: f2-3inch-micro`, mc_percent 100, layer 20/20, plate
+cooled — the English→CAD→verify→slice→print pipeline physically closed
+(human-initiated from the touchscreen, per design). Kerry's physical QA
+pending: M2 screw fit in FC holes (fit_clearance=0.2 was a guess until
+measured), plate flatness, arm stiffness. Report measurements back into the
+spec when done.
+
+**Auto-print leg — writes still dropped WITH dev mode on (2026-07-21):**
+Kerry enabled Developer Mode; light toggle retested → still no-op (returns
+True, state unchanged against fresh pushall; reads live and accurate — the
+same payload correctly reported the finished print). Next discriminator:
+**power-cycle the printer** (auth-control changes commonly need a restart),
+then re-run the light test. If still dead post-reboot, the working theory
+becomes N7 command schema ≠ what bambulabs_api publishes — investigate by
+reading the raw request topic, not by trusting the library.
 
 **No longer blocked:** the frontier column no longer needs an API key — the
 `claude-code` backend runs on the Max plan (`python -m harness.golden
