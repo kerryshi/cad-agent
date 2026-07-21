@@ -331,11 +331,23 @@ reports success only from observed pushall state, never the ack; payload
 tests in `tests/test_printleg.py`). Checked the library's `start_print_3mf`:
 its `project_file` envelope IS well-formed — the start channel should work
 as-is (with `use_ams=False` for the external spool, per the 07-20 finding).
-**Deliberately NOT tested:** an actual remote `start_print` — never start a
-print unattended, and the finished f2 is still on the plate. First remote
-print happens in a Kerry-present session, after preflight, with the plate
-clear. Whether dev-mode-off ALSO gated writes earlier is now untestable
-history (the light payload was malformed in every pre-fix test).
+**Deliberately NOT tested at first:** an actual remote `start_print` — then
+tested the same day, Kerry-present. Whether dev-mode-off ALSO gated writes
+earlier is untestable history (the light payload was malformed in every
+pre-fix test).
+
+**AUTO-PRINT LEG CLOSED (2026-07-21, Kerry-present):** f5-3inch-25mount
+uploaded over FTPS (byte-exact, 899052 bytes — first live exercise of the
+`ftps.py` session-reuse STOR path) and remote-started via
+`start_print_3mf(use_ams=False)`; state read back RUNNING with
+`subtask_name: f5-3inch-25mount` 8s after publish. Sequence: preflight all
+green → upload → **Kerry confirmed plate clear** (the one fact no sensor
+reports; camera liveview returned no frames on this model — separate
+toggle or different protocol, not investigated) → start → verify from
+state. Every pipeline leg is now individually proven live. Next natural
+feature: an opt-in `--send` leg on `harness.make` (preflight gate + explicit
+confirm; design the human-confirm carefully in a non-interactive CLI —
+plate-clear can never be assumed by an autonomous session).
 
 **No longer blocked:** the frontier column no longer needs an API key — the
 `claude-code` backend runs on the Max plan (`python -m harness.golden
