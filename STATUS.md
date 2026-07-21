@@ -296,18 +296,29 @@ Credentials live in `printleg/printer.env` — GITIGNORED, never commit.
   the PETG is on the external spool and all four AMS trays are empty, so the
   default maps the job to an empty tray. Needs `use_ams=False`.
 
-**OPEN — the question that decides the auto-print leg:** every write command so
-far returns True and does nothing. The chamber light would not toggle via raw
-gcode (`M960 S5 P0`) OR the library's `turn_light_off()`, verified against
-fresh `pushall` state, while reads work flawlessly. `start_print` uses that
-same channel. Could be the absent storage; could be N7 protocol. **Untested
-until a FAT32 drive is in the printer** — that is the next action, and the
-light toggle is the one-second test that forks the project.
+**FORK TEST ANSWERED (2026-07-21, stick in printer): storage was NOT the
+cause — MQTT writes are still silently dropped.** With the FAT32 drive
+mounted (preflight ALL GREEN: `sdcard: True`, PETG loaded + matching,
+nozzle 0.4mm, idle, no error; `f2-3inch-micro.gcode.3mf` confirmed on the
+drive via FTPS listing), `turn_light_on()` still returned True with the
+chamber light staying off, verified against fresh `pushall` state both
+sides. Reads flawless, writes no-op — that signature is exactly Bambu
+Authorization Control dropping unauthorized commands, so the LEADING
+hypothesis is now **Developer Mode not actually active** (never verified on
+the touchscreen; enabling may need a reboot or got reset by a firmware
+update); fallback hypothesis: N7 command schema differs. `start_print` uses
+the same channel, so the auto-print leg stays blocked until the light
+toggles. Evidence: scratchpad fork_test.py run 2026-07-21; preflight module
+output in the run log.
 
-**BLOCKED on Kerry:**
-1. **Move the prepared USB stick from this PC into the printer** (still
-   showing as `E: BAMBU` on the desktop as of 2026-07-20 01:20). Then the light
-   toggle, and the first physical print of f2 from the touchscreen.
+**BLOCKED on Kerry (updated 2026-07-21):**
+1. **Press print**: everything physical is green — touchscreen → files →
+   `f2-3inch-micro.gcode.3mf` (39.5 min PETG). Confirm the Textured PEI
+   plate is installed first (preflight cannot read plate type).
+2. **While at the printer: verify LAN-only + Developer Mode are actually ON
+   in settings** (and note firmware version). If Developer Mode was off or
+   reset, re-enable + reboot, then the light toggle re-test decides the
+   auto-print leg.
 
 **No longer blocked:** the frontier column no longer needs an API key — the
 `claude-code` backend runs on the Max plan (`python -m harness.golden
