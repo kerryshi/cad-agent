@@ -60,13 +60,25 @@ validation), reference builder + 3 sabotages, spec-derived frame verifier,
 family registry (`toolchain/families.py`) threading enclosure|frame through
 prompts/loop/golden. Frame golden run, claude-code:sonnet: **4/4 extract,
 4/4 codegen, all iter=1** (`results/claude-code-sonnet--frame_tasks.json`).
+**f5-3inch-25mount added 2026-07-20** (5th frame task): f2 geometry with a
+25.5×25.5 M2 FC mount instead of 20×20 — no schema change, `FCPattern.FC25`
+already existed. Motive: fit the wider/cheaper 25.5 HD-whoop AIO board market
+(e.g. Happymodel Super F405HD) vs the thinner 20×20 selection. Diff vs f2 is
+exactly one field (`fc_mount`); validated through the real `model_validator`
+(body margin 4.1 mm), reference STEP built + PETG-sliced (staged below). Not
+yet agent-run — the golden set is now 5 frame tasks.
 
 **PRINT FILES STAGED for Kerry** (gitignored, `prints/`): agent-generated,
 probe-verified, PETG-sliced, **re-staged 2026-07-19** after the profile-
 inheritance defect below invalidated the 07-17 batch —
 - `prints/f1-5inch-freestyle/` — 62.1 min, 25 layers, 21.7 cm³ PETG
 - `prints/f2-3inch-micro/` — 39.5 min, 20 layers, 10.8 cm³ PETG
-Each has `<name>.gcode.3mf`, raw gcode, and renders. **To print: copy the
+- `prints/f5-3inch-25mount/` — 39.7 min, 20 layers, 10.79 cm³ PETG (added
+  2026-07-20; f2 with a 25.5×25.5 M2 FC mount — buy M2 FC hardware. Fit-check
+  an M2 screw in an FC hole after printing.)
+f1/f2 have `<name>.gcode.3mf`, raw gcode, and renders; f5 has the 3mf + raw
+gcode but no renders (this box's OpenGL thumbnail export fails — not needed to
+print). **To print: copy the
 `.gcode.3mf` to the microSD, print from the touchscreen.** Bambu Studio is NOT
 installed on this machine (the 07-17 note said to use it — wrong); OrcaSlicer
 portable is the only slicer here. Re-stage any part with
@@ -254,4 +266,4 @@ though `claude -p` can Read PNGs and may cover that too — untested).
 **Open questions:** verify's oracles assume cooperative codegen (documented in
 verify.py); cutout checks cross-talk with wall defects (observed, harmless).
 
-**Last updated:** 2026-07-19 (merge gate + skip guard installed, refuse-first proven; prior: 2026-07-17 Phase B build + first golden run).
+**Last updated:** 2026-07-20 (f5-3inch-25mount variant added + PETG-staged; prior: 2026-07-19 merge gate + skip guard installed, refuse-first proven).
