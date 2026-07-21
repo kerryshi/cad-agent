@@ -65,8 +65,12 @@ prompts/loop/golden. Frame golden run, claude-code:sonnet: **4/4 extract,
 already existed. Motive: fit the wider/cheaper 25.5 HD-whoop AIO board market
 (e.g. Happymodel Super F405HD) vs the thinner 20×20 selection. Diff vs f2 is
 exactly one field (`fc_mount`); validated through the real `model_validator`
-(body margin 4.1 mm), reference STEP built + PETG-sliced (staged below). Not
-yet agent-run — the golden set is now 5 frame tasks.
+(body margin 4.1 mm), reference STEP built + PETG-sliced (staged below).
+Golden agent run (claude-code:sonnet, 2026-07-20): **extract PASS, codegen
+PASS iter=1** — verifier accepted the LLM's CadQuery first try, zero failures
+(`failures_last: []`); slice ok 39.6 min/20/10.79 cm³, matching the reference.
+Evidence: `results/claude-code-sonnet--f5.json`. The frame family is now
+effectively 5/5 for sonnet; the golden set is 5 frame tasks.
 
 **PRINT FILES STAGED for Kerry** (gitignored, `prints/`): agent-generated,
 probe-verified, PETG-sliced, **re-staged 2026-07-19** after the profile-
@@ -266,4 +270,4 @@ though `claude -p` can Read PNGs and may cover that too — untested).
 **Open questions:** verify's oracles assume cooperative codegen (documented in
 verify.py); cutout checks cross-talk with wall defects (observed, harmless).
 
-**Last updated:** 2026-07-20 (f5-3inch-25mount variant added + PETG-staged; prior: 2026-07-19 merge gate + skip guard installed, refuse-first proven).
+**Last updated:** 2026-07-20 (f5-3inch-25mount variant added, PETG-staged, and agent-run 1/1 via claude-code:sonnet; prior: 2026-07-19 merge gate + skip guard installed, refuse-first proven).
