@@ -12,9 +12,11 @@ class ScriptedBackend:
         self.name = name
         self._responses = list(responses)
         self.calls: list[tuple[str, str]] = []  # (system, user) pairs, for assertions
+        self.schemas: list[dict | None] = []  # schema per call, for assertions
 
-    def complete(self, system: str, user: str) -> str:
+    def complete(self, system: str, user: str, schema: dict | None = None) -> str:
         self.calls.append((system, user))
+        self.schemas.append(schema)
         if not self._responses:
             raise RuntimeError("scripted backend exhausted")
         # repeat the last response if the loop asks more times than scripted

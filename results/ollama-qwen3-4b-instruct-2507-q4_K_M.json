@@ -1,6 +1,6 @@
 {
-  "backend": "ollama:llama3.1:8b",
-  "extract_backend": "ollama:llama3.1:8b",
+  "backend": "ollama:qwen3:4b-instruct-2507-q4_K_M",
+  "extract_backend": "ollama:qwen3:4b-instruct-2507-q4_K_M",
   "stage": "extract",
   "max_iterations": 3,
   "rows": [
@@ -8,11 +8,11 @@
       "id": "t1-pi-hat-box",
       "family": "enclosure",
       "extract": {
-        "ok": true,
+        "ok": false,
         "parsed": true,
         "attempts": 1,
-        "seconds": 2.8,
-        "error": ""
+        "seconds": 3.6,
+        "error": "spec mismatch"
       }
     },
     {
@@ -22,7 +22,7 @@
         "ok": true,
         "parsed": true,
         "attempts": 1,
-        "seconds": 1.0,
+        "seconds": 0.5,
         "error": ""
       }
     },
@@ -30,66 +30,66 @@
       "id": "t3-big-controller",
       "family": "enclosure",
       "extract": {
-        "ok": true,
+        "ok": false,
         "parsed": true,
         "attempts": 1,
-        "seconds": 2.5,
-        "error": ""
+        "seconds": 0.5,
+        "error": "spec mismatch"
       }
     },
     {
       "id": "t4-usbc-dongle",
       "family": "enclosure",
       "extract": {
-        "ok": true,
+        "ok": false,
         "parsed": true,
         "attempts": 1,
-        "seconds": 1.5,
-        "error": ""
+        "seconds": 0.5,
+        "error": "spec mismatch"
       }
     },
     {
       "id": "t5-sensor-node",
       "family": "enclosure",
       "extract": {
-        "ok": true,
+        "ok": false,
         "parsed": true,
         "attempts": 1,
-        "seconds": 2.0,
-        "error": ""
+        "seconds": 0.5,
+        "error": "spec mismatch"
       }
     },
     {
       "id": "t6-relay-box",
       "family": "enclosure",
       "extract": {
-        "ok": true,
+        "ok": false,
         "parsed": true,
         "attempts": 1,
-        "seconds": 2.0,
-        "error": ""
+        "seconds": 0.8,
+        "error": "spec mismatch"
       }
     },
     {
       "id": "t7-flat-tray",
       "family": "enclosure",
       "extract": {
-        "ok": true,
+        "ok": false,
         "parsed": true,
         "attempts": 1,
-        "seconds": 2.1,
-        "error": ""
+        "seconds": 0.8,
+        "error": "spec mismatch"
       }
     },
     {
       "id": "t8-tall-tower",
       "family": "enclosure",
       "extract": {
-        "ok": true,
+        "ok": false,
         "parsed": true,
         "attempts": 1,
-        "seconds": 1.7,
-        "error": ""
+        "seconds": 0.5,
+        "error": "spec mismatch"
       }
     }
   ]

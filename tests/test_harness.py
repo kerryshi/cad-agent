@@ -7,6 +7,7 @@ script through the real sandbox + verify.
 
 import json
 
+import pydantic
 import pytest
 
 from harness.backends.scripted import ScriptedBackend
@@ -160,6 +161,22 @@ def test_loop_gives_up_at_cap(tmp_path):
 
 # ---- extraction ----
 
+def test_extract_passes_schema_to_backend():
+    # constrained decoding: the extract stage offers the spec's JSON schema to
+    # the backend; codegen never does (shape-only guarantee, extraction only)
+    backend = ScriptedBackend(['{"length": 40, "width": 40, "height": 20}'])
+    r = extract_spec(backend, "a 40x40x20 box")
+    assert r.ok
+    assert backend.schemas == [EnclosureSpec.model_json_schema()]
+
+
+def test_codegen_passes_no_schema(tmp_path):
+    backend = ScriptedBackend([GOOD_SCRIPT])
+    result = generate_part(backend, minimal_spec(), tmp_path)
+    assert result.ok, result.detail
+    assert backend.schemas == [None]
+
+
 def test_extract_valid_json():
     backend = ScriptedBackend(['{"length": 40, "width": 40, "height": 20}'])
     r = extract_spec(backend, "a 40x40x20 box")
@@ -178,6 +195,101 @@ def test_extract_gives_up():
     assert not r.ok
 
 
+# ---- ollama constrained decoding ----
+
+def test_ollama_payload_carries_schema(monkeypatch):
+    """schema -> Ollama `format` + temp 0; no schema -> neither (codegen path)."""
+    from harness.backends import ollama_backend
+
+    captured = {}
+
+    class FakeResp:
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *exc):
+            return False
+
+        def read(self):
+            return json.dumps({"message": {"content": "{}"}}).encode()
+
+    def fake_urlopen(req, timeout):
+        captured["payload"] = json.loads(req.data.decode())
+        return FakeResp()
+
+    monkeypatch.setattr(ollama_backend.urllib.request, "urlopen", fake_urlopen)
+    b = ollama_backend.OllamaBackend(model="m")
+
+    b.complete("sys", "user")
+    assert "format" not in captured["payload"]
+    assert "options" not in captured["payload"]
+
+    schema = EnclosureSpec.model_json_schema()
+    b.complete("sys", "user", schema=schema)
+    assert captured["payload"]["format"] == schema
+    assert captured["payload"]["options"]["temperature"] == 0
+
+
+# ---- golden hybrid (extract backend != codegen backend) ----
+
+def test_golden_hybrid_uses_extract_backend(monkeypatch, tmp_path):
+    import harness.golden as golden
+
+    backends = {}
+
+    def fake_get_backend(kind, model=None):
+        name = f"{kind}:{model}" if model else kind
+        backends[kind] = ScriptedBackend(
+            ['{"length": 40, "width": 40, "height": 20}'], name=name)
+        return backends[kind]
+
+    monkeypatch.setattr(golden, "get_backend", fake_get_backend)
+    monkeypatch.setattr(golden, "ROOT", tmp_path)  # results/out go to tmp
+
+    rc = golden.main(["--backend", "claude-code", "--extract-backend", "ollama",
+                      "--extract-model", "q", "--stage", "extract", "--limit", "1",
+                      "--tasks", str(GOLDEN)])
+    assert rc == 0
+    assert backends["ollama"].calls, "extraction must run on the extract backend"
+    assert not backends["claude-code"].calls, "codegen backend must sit idle in extract stage"
+
+    out = json.loads(
+        (tmp_path / "results" / "hybrid--ollama-q--claude-code.json").read_text())
+    assert out["extract_backend"] == "ollama:q"
+    assert out["backend"] == "claude-code"
+
+
+def test_golden_hybrid_routes_codegen_to_codegen_backend(monkeypatch, tmp_path):
+    # pins the full-stage routing: extract calls land on the extract backend,
+    # codegen calls (and only those) on the codegen backend
+    import harness.golden as golden
+
+    task = {"id": "mini", "request": "a 40x40x20 box, all defaults",
+            "expected": {"length": 40, "width": 40, "height": 20}}
+    tasks_file = tmp_path / "mini_tasks.json"
+    tasks_file.write_text(json.dumps([task]), encoding="utf-8")
+
+    backends = {}
+
+    def fake_get_backend(kind, model=None):
+        responses = {"ollama": ['{"length": 40, "width": 40, "height": 20}'],
+                     "claude-code": [GOOD_SCRIPT]}[kind]
+        backends[kind] = ScriptedBackend(responses, name=kind)
+        return backends[kind]
+
+    monkeypatch.setattr(golden, "get_backend", fake_get_backend)
+    monkeypatch.setattr(golden, "ROOT", tmp_path)
+
+    rc = golden.main(["--backend", "claude-code", "--extract-backend", "ollama",
+                      "--stage", "both", "--tasks", str(tasks_file)])
+    assert rc == 0
+    assert len(backends["ollama"].calls) == 1
+    assert backends["ollama"].schemas == [EnclosureSpec.model_json_schema()]
+    assert len(backends["claude-code"].calls) == 1
+    assert "cadquery" in backends["claude-code"].calls[0][0]  # codegen system prompt
+    assert backends["claude-code"].schemas == [None]
+
+
 # ---- golden set integrity ----
 
 def test_golden_tasks_load_and_validate():
@@ -187,6 +299,36 @@ def test_golden_tasks_load_and_validate():
     assert len(set(ids)) == len(ids)
     for t in tasks:
         assert t["request"].strip()
+
+
+def test_canonical_dump_resolves_derived_standoff_od():
+    # outer_diameter=None means "derive od()"; an extraction that states the
+    # SAME derived value is the same part and must score MATCH — a different
+    # value is a real miss and must still FAIL
+    from copy import deepcopy
+
+    from toolchain.families import get_family
+
+    fam = get_family("enclosure")
+    base = {"length": 90, "width": 90, "height": 15,
+            "standoffs": [{"x": 20, "y": 20, "height": 4, "screw": "M2"}]}
+    expected = fam.spec_cls.model_validate(base)
+
+    explicit = deepcopy(base)
+    explicit["standoffs"][0]["outer_diameter"] = expected.standoffs[0].od()
+    same = fam.spec_cls.model_validate(explicit)
+    assert approx_equal(fam.dump_canonical(same), fam.dump_canonical(expected))
+
+    wrong = deepcopy(base)
+    wrong["standoffs"][0]["outer_diameter"] = 7.5
+    other = fam.spec_cls.model_validate(wrong)
+    assert not approx_equal(fam.dump_canonical(other), fam.dump_canonical(expected))
+
+    # 0 must refuse loudly, not silently fold into "derive" via `or` truthiness
+    zero = deepcopy(base)
+    zero["standoffs"][0]["outer_diameter"] = 0
+    with pytest.raises(pydantic.ValidationError):
+        fam.spec_cls.model_validate(zero)
 
 
 def test_approx_equal_semantics():

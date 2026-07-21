@@ -7,6 +7,11 @@ codegen always starts from the EXPECTED spec, not the extracted one.
 Usage:
   python -m harness.golden --backend anthropic [--model claude-haiku-4-5]
   python -m harness.golden --backend ollama --model llama3.1:8b --limit 2
+
+Hybrid (local extraction, frontier codegen): --extract-backend/--extract-model
+route the extract stage to a different backend; codegen stays on --backend.
+  python -m harness.golden --backend claude-code --model sonnet \
+      --extract-backend ollama --extract-model qwen3:4b
 """
 
 from __future__ import annotations
@@ -49,18 +54,30 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--backend", required=True,
                    choices=["anthropic", "ollama", "claude-code"])
     p.add_argument("--model", default=None)
+    p.add_argument("--extract-backend", default=None,
+                   choices=["anthropic", "ollama", "claude-code"])
+    p.add_argument("--extract-model", default=None)
     p.add_argument("--stage", default="both", choices=["extract", "codegen", "both"])
     p.add_argument("--limit", type=int, default=None)
     p.add_argument("--max-iterations", type=int, default=3)
     p.add_argument("--tasks", default=str(ROOT / "golden" / "tasks.json"))
     args = p.parse_args(argv)
+    if args.extract_model and not args.extract_backend:
+        p.error("--extract-model requires --extract-backend")
 
     backend = get_backend(args.backend, args.model)
+    extract_backend = (get_backend(args.extract_backend, args.extract_model)
+                       if args.extract_backend else backend)
     tasks = load_tasks(Path(args.tasks))
     if args.limit:
         tasks = tasks[: args.limit]
 
-    safe_name = backend.name.replace(":", "-").replace("/", "-").replace(".", "_")
+    def safe(name: str) -> str:
+        return name.replace(":", "-").replace("/", "-").replace(".", "_")
+
+    safe_name = safe(backend.name)
+    if extract_backend is not backend:
+        safe_name = f"hybrid--{safe(extract_backend.name)}--{safe(backend.name)}"
     stem = Path(args.tasks).stem
     if stem != "tasks":  # non-default task file gets its own results/workdir names
         safe_name = f"{safe_name}--{stem}"
@@ -76,12 +93,10 @@ def main(argv: list[str] | None = None) -> int:
 
         if args.stage in ("extract", "both"):
             t0 = time.monotonic()
-            er = extract_spec(backend, task["request"], fam)
+            er = extract_spec(extract_backend, task["request"], fam)
             match = bool(
                 er.ok
-                and approx_equal(
-                    er.spec.model_dump(mode="json"), expected.model_dump(mode="json")
-                )
+                and approx_equal(fam.dump_canonical(er.spec), fam.dump_canonical(expected))
             )
             row["extract"] = {
                 "ok": match, "parsed": er.ok, "attempts": er.attempts,
@@ -120,13 +135,15 @@ def main(argv: list[str] | None = None) -> int:
 
         rows.append(row)
 
-    out = {"backend": backend.name, "stage": args.stage,
-           "max_iterations": args.max_iterations, "rows": rows}
+    out = {"backend": backend.name, "extract_backend": extract_backend.name,
+           "stage": args.stage, "max_iterations": args.max_iterations, "rows": rows}
     out_path = results_dir / f"{safe_name}.json"
     out_path.write_text(json.dumps(out, indent=2), encoding="utf-8")
 
     # markdown table
-    lines = [f"\n### {backend.name}", "",
+    title = (backend.name if extract_backend is backend
+             else f"extract={extract_backend.name} + codegen={backend.name}")
+    lines = [f"\n### {title}", "",
              "| task | extract | codegen (iters) | slice |", "|---|---|---|---|"]
     ex_pass = cg_pass = 0
     for r in rows:

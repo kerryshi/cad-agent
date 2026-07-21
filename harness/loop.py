@@ -39,8 +39,10 @@ def extract_spec(backend: Backend, request: str, family: Family = ENCLOSURE,
                  max_attempts: int = 2) -> ExtractResult:
     feedback = None
     system = prompts.extract_system(family)
+    schema = family.spec_cls.model_json_schema()  # decode-constrains shape, never values
     for attempt in range(1, max_attempts + 1):
-        text = backend.complete(system, prompts.extract_user(request, feedback))
+        text = backend.complete(system, prompts.extract_user(request, feedback),
+                                schema=schema)
         try:
             return ExtractResult(
                 ok=True, spec=prompts.parse_spec_response(text, family), attempts=attempt)

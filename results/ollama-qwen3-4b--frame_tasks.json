@@ -1,0 +1,63 @@
+{
+  "backend": "ollama:qwen3:4b",
+  "extract_backend": "ollama:qwen3:4b",
+  "stage": "extract",
+  "max_iterations": 3,
+  "rows": [
+    {
+      "id": "f1-5inch-freestyle",
+      "family": "frame",
+      "extract": {
+        "ok": true,
+        "parsed": true,
+        "attempts": 1,
+        "seconds": 23.6,
+        "error": ""
+      }
+    },
+    {
+      "id": "f2-3inch-micro",
+      "family": "frame",
+      "extract": {
+        "ok": true,
+        "parsed": true,
+        "attempts": 1,
+        "seconds": 13.9,
+        "error": ""
+      }
+    },
+    {
+      "id": "f3-2inch-whoopish",
+      "family": "frame",
+      "extract": {
+        "ok": true,
+        "parsed": true,
+        "attempts": 1,
+        "seconds": 14.7,
+        "error": ""
+      }
+    },
+    {
+      "id": "f4-7inch-longrange",
+      "family": "frame",
+      "extract": {
+        "ok": true,
+        "parsed": true,
+        "attempts": 1,
+        "seconds": 16.5,
+        "error": ""
+      }
+    },
+    {
+      "id": "f5-3inch-25mount",
+      "family": "frame",
+      "extract": {
+        "ok": true,
+        "parsed": true,
+        "attempts": 1,
+        "seconds": 13.0,
+        "error": ""
+      }
+    }
+  ]
+}

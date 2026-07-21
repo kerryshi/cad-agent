@@ -1,6 +1,6 @@
 {
-  "backend": "ollama:llama3.1:8b",
-  "extract_backend": "ollama:llama3.1:8b",
+  "backend": "ollama:qwen3:4b",
+  "extract_backend": "ollama:qwen3:4b",
   "stage": "extract",
   "max_iterations": 3,
   "rows": [
@@ -8,11 +8,11 @@
       "id": "t1-pi-hat-box",
       "family": "enclosure",
       "extract": {
-        "ok": true,
+        "ok": false,
         "parsed": true,
         "attempts": 1,
-        "seconds": 2.8,
-        "error": ""
+        "seconds": 28.8,
+        "error": "spec mismatch"
       }
     },
     {
@@ -22,7 +22,7 @@
         "ok": true,
         "parsed": true,
         "attempts": 1,
-        "seconds": 1.0,
+        "seconds": 17.7,
         "error": ""
       }
     },
@@ -33,7 +33,7 @@
         "ok": true,
         "parsed": true,
         "attempts": 1,
-        "seconds": 2.5,
+        "seconds": 25.2,
         "error": ""
       }
     },
@@ -41,11 +41,11 @@
       "id": "t4-usbc-dongle",
       "family": "enclosure",
       "extract": {
-        "ok": true,
+        "ok": false,
         "parsed": true,
         "attempts": 1,
-        "seconds": 1.5,
-        "error": ""
+        "seconds": 25.5,
+        "error": "spec mismatch"
       }
     },
     {
@@ -55,7 +55,7 @@
         "ok": true,
         "parsed": true,
         "attempts": 1,
-        "seconds": 2.0,
+        "seconds": 22.4,
         "error": ""
       }
     },
@@ -66,7 +66,7 @@
         "ok": true,
         "parsed": true,
         "attempts": 1,
-        "seconds": 2.0,
+        "seconds": 24.4,
         "error": ""
       }
     },
@@ -77,7 +77,7 @@
         "ok": true,
         "parsed": true,
         "attempts": 1,
-        "seconds": 2.1,
+        "seconds": 22.3,
         "error": ""
       }
     },
@@ -88,7 +88,7 @@
         "ok": true,
         "parsed": true,
         "attempts": 1,
-        "seconds": 1.7,
+        "seconds": 26.6,
         "error": ""
       }
     }

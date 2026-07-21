@@ -1,0 +1,138 @@
+{
+  "backend": "claude-code:sonnet",
+  "extract_backend": "ollama:qwen3:4b",
+  "stage": "both",
+  "max_iterations": 3,
+  "rows": [
+    {
+      "id": "f1-5inch-freestyle",
+      "family": "frame",
+      "extract": {
+        "ok": true,
+        "parsed": true,
+        "attempts": 1,
+        "seconds": 19.1,
+        "error": ""
+      },
+      "codegen": {
+        "ok": true,
+        "iterations": 1,
+        "seconds": 106.9,
+        "failures_last": []
+      },
+      "slice": [
+        {
+          "part": "frame",
+          "ok": true,
+          "minutes": 62.1,
+          "layers": 25,
+          "cm3": 21.68
+        }
+      ]
+    },
+    {
+      "id": "f2-3inch-micro",
+      "family": "frame",
+      "extract": {
+        "ok": true,
+        "parsed": true,
+        "attempts": 1,
+        "seconds": 17.0,
+        "error": ""
+      },
+      "codegen": {
+        "ok": true,
+        "iterations": 1,
+        "seconds": 80.9,
+        "failures_last": []
+      },
+      "slice": [
+        {
+          "part": "frame",
+          "ok": true,
+          "minutes": 39.5,
+          "layers": 20,
+          "cm3": 10.78
+        }
+      ]
+    },
+    {
+      "id": "f3-2inch-whoopish",
+      "family": "frame",
+      "extract": {
+        "ok": true,
+        "parsed": true,
+        "attempts": 1,
+        "seconds": 13.0,
+        "error": ""
+      },
+      "codegen": {
+        "ok": true,
+        "iterations": 2,
+        "seconds": 149.8,
+        "failures_last": []
+      },
+      "slice": [
+        {
+          "part": "frame",
+          "ok": true,
+          "minutes": 30.0,
+          "layers": 15,
+          "cm3": 5.92
+        }
+      ]
+    },
+    {
+      "id": "f4-7inch-longrange",
+      "family": "frame",
+      "extract": {
+        "ok": true,
+        "parsed": true,
+        "attempts": 1,
+        "seconds": 13.7,
+        "error": ""
+      },
+      "codegen": {
+        "ok": true,
+        "iterations": 1,
+        "seconds": 98.8,
+        "failures_last": []
+      },
+      "slice": [
+        {
+          "part": "frame",
+          "ok": true,
+          "minutes": 87.2,
+          "layers": 30,
+          "cm3": 35.06
+        }
+      ]
+    },
+    {
+      "id": "f5-3inch-25mount",
+      "family": "frame",
+      "extract": {
+        "ok": true,
+        "parsed": true,
+        "attempts": 1,
+        "seconds": 18.8,
+        "error": ""
+      },
+      "codegen": {
+        "ok": true,
+        "iterations": 1,
+        "seconds": 105.5,
+        "failures_last": []
+      },
+      "slice": [
+        {
+          "part": "frame",
+          "ok": true,
+          "minutes": 39.6,
+          "layers": 20,
+          "cm3": 10.79
+        }
+      ]
+    }
+  ]
+}
