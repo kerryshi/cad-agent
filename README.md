@@ -35,12 +35,16 @@ cheapest model that aces it:
 | ollama:llama3.1:8b — freeform | 5/8 | 0/8 | — | — |
 | ollama:llama3.1:8b — schema-constrained | **8/8** | — | **5/5** | — |
 | ollama:qwen3:4b — schema-constrained | 6/8 | — | 5/5 | — |
+| ollama:qwen3-coder:30b — schema-constrained | 8/8 | 0/8 | 5/5 | 0/5 |
 | claude-code:sonnet | 8/8 | 8/8 (all iter=1) | 5/5 | 5/5 (all iter=1) |
 | **hybrid: llama3.1:8b extract + sonnet codegen** | **8/8** | **8/8 (all iter=1)** | **5/5** | **5/5 (all iter=1)** |
 
 Same model, same tasks: llama3.1:8b went **5/8 → 8/8** when the spec's JSON
 schema moved from prose-only to the decoder — the decode config was worth
-more than any model swap. The cautionary column: `qwen3-4b-instruct-2507`,
+more than any model swap. The fairness column is the thesis in one row:
+`qwen3-coder:30b`, the strongest local code model this GPU can run, extracts
+**13/13** and closes **0/13** CadQuery parts at the 3-iteration cap — the
+split isn't a compromise, it's what the measurements say. The cautionary column: `qwen3-4b-instruct-2507`,
 the leaderboard pick for structured extraction, scored **1/8** — under the
 schema grammar it emits the minimal valid object and silently drops every
 stated standoff/cutout (freeform it extracts them fine). Bench the

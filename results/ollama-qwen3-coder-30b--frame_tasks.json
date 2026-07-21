@@ -1,0 +1,119 @@
+{
+  "backend": "ollama:qwen3-coder:30b",
+  "extract_backend": "ollama:qwen3-coder:30b",
+  "stage": "both",
+  "max_iterations": 3,
+  "rows": [
+    {
+      "id": "f1-5inch-freestyle",
+      "family": "frame",
+      "extract": {
+        "ok": true,
+        "parsed": true,
+        "attempts": 1,
+        "seconds": 3.4,
+        "error": ""
+      },
+      "codegen": {
+        "ok": false,
+        "iterations": 3,
+        "seconds": 82.6,
+        "failures_last": [
+          "script exited 1",
+          "stderr (tail):",
+          "Traceback (most recent call last):",
+          "  File \"C:\\Users\\PC\\cad-agent\\out\\golden\\ollama-qwen3-coder-30b--frame_tasks\\f1-5inch-freestyle\\iter3\\gen_build.py\", line 110, in <module>",
+          "    ).rotate((0, 0, 1), angle)",
+          "      ^^^^^^^^^^^^^^^^^^^^^^^^",
+          "TypeError: Workplane.rotate() missing 1 required positional argument: 'angleDegrees'"
+        ]
+      }
+    },
+    {
+      "id": "f2-3inch-micro",
+      "family": "frame",
+      "extract": {
+        "ok": true,
+        "parsed": true,
+        "attempts": 1,
+        "seconds": 2.1,
+        "error": ""
+      },
+      "codegen": {
+        "ok": false,
+        "iterations": 3,
+        "seconds": 134.4,
+        "failures_last": [
+          "script exited 1",
+          "stderr (tail):",
+          "Traceback (most recent call last):",
+          "  File \"C:\\Users\\PC\\cad-agent\\out\\golden\\ollama-qwen3-coder-30b--frame_tasks\\f2-3inch-micro\\iter3\\gen_build.py\", line 185, in <module>",
+          "    frame = build_frame(spec)",
+          "            ^^^^^^^^^^^^^^^^^",
+          "  File \"C:\\Users\\PC\\cad-agent\\out\\golden\\ollama-qwen3-coder-30b--frame_tasks\\f2-3inch-micro\\iter3\\gen_build.py\", line 112, in build_frame",
+          "    pad_diameter = pad_diameter(spec[\"motor_mount\"])"
+        ]
+      }
+    },
+    {
+      "id": "f3-2inch-whoopish",
+      "family": "frame",
+      "extract": {
+        "ok": true,
+        "parsed": true,
+        "attempts": 1,
+        "seconds": 22.6,
+        "error": ""
+      },
+      "codegen": {
+        "ok": false,
+        "iterations": 3,
+        "seconds": 90.3,
+        "failures_last": [
+          "verification failures:",
+          "frame.load: expected 1 solid, got 14"
+        ]
+      }
+    },
+    {
+      "id": "f4-7inch-longrange",
+      "family": "frame",
+      "extract": {
+        "ok": true,
+        "parsed": true,
+        "attempts": 1,
+        "seconds": 2.1,
+        "error": ""
+      },
+      "codegen": {
+        "ok": false,
+        "iterations": 3,
+        "seconds": 82.8,
+        "failures_last": [
+          "verification failures:",
+          "frame.load: expected 1 solid, got 3"
+        ]
+      }
+    },
+    {
+      "id": "f5-3inch-25mount",
+      "family": "frame",
+      "extract": {
+        "ok": true,
+        "parsed": true,
+        "attempts": 1,
+        "seconds": 2.1,
+        "error": ""
+      },
+      "codegen": {
+        "ok": false,
+        "iterations": 3,
+        "seconds": 97.6,
+        "failures_last": [
+          "verification failures:",
+          "frame.load: expected 1 solid, got 5"
+        ]
+      }
+    }
+  ]
+}

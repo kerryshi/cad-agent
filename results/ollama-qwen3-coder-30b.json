@@ -1,0 +1,203 @@
+{
+  "backend": "ollama:qwen3-coder:30b",
+  "extract_backend": "ollama:qwen3-coder:30b",
+  "stage": "both",
+  "max_iterations": 3,
+  "rows": [
+    {
+      "id": "t1-pi-hat-box",
+      "family": "enclosure",
+      "extract": {
+        "ok": true,
+        "parsed": true,
+        "attempts": 1,
+        "seconds": 25.9,
+        "error": ""
+      },
+      "codegen": {
+        "ok": false,
+        "iterations": 3,
+        "seconds": 101.9,
+        "failures_last": [
+          "script exited 1",
+          "stderr (tail):",
+          "Traceback (most recent call last):",
+          "  File \"C:\\Users\\PC\\cad-agent\\out\\golden\\ollama-qwen3-coder-30b\\t1-pi-hat-box\\iter3\\gen_build.py\", line 109, in <module>",
+          "    body = cq.Solid.makeBox(spec.length, spec.width, spec.height, centered=False)",
+          "           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^",
+          "TypeError: Solid.makeBox() got an unexpected keyword argument 'centered'"
+        ]
+      }
+    },
+    {
+      "id": "t2-minimal-box",
+      "family": "enclosure",
+      "extract": {
+        "ok": true,
+        "parsed": true,
+        "attempts": 1,
+        "seconds": 1.5,
+        "error": ""
+      },
+      "codegen": {
+        "ok": false,
+        "iterations": 3,
+        "seconds": 94.7,
+        "failures_last": [
+          "verification failures:",
+          "lid.load: expected 1 solid, got 2",
+          "body.bbox: max err 20.000mm (tol 0.1); got (2.00,2.00,-0.00)-(42.00,42.00,40.00)",
+          "wall.-x: 12 probes, missing material: depth 0.70mm at u=11.0,z=6.7; depth 1.80mm at u=11.0,z=6.7; depth 0.70mm at u=11.0,z=12.9",
+          "wall.-y: 12 probes, missing material: depth 0.70mm at u=11.0,z=6.7; depth 1.80mm at u=11.0,z=6.7; depth 0.70mm at u=11.0,z=12.9",
+          "floor: 12 probes, missing material: z=0.70 at (12.8,12.8); z=1.80 at (12.8,12.8); z=0.70 at (12.8,27.2)",
+          "post[0]: (5.5,5.5): pilot hole missing (center is solid near top)",
+          "post[1]: (34.5,5.5): pilot hole missing (center is solid near top)"
+        ]
+      }
+    },
+    {
+      "id": "t3-big-controller",
+      "family": "enclosure",
+      "extract": {
+        "ok": true,
+        "parsed": true,
+        "attempts": 1,
+        "seconds": 5.6,
+        "error": ""
+      },
+      "codegen": {
+        "ok": false,
+        "iterations": 3,
+        "seconds": 97.0,
+        "failures_last": [
+          "script exited 1",
+          "stderr (tail):",
+          "Traceback (most recent call last):",
+          "  File \"C:\\Users\\PC\\cad-agent\\out\\golden\\ollama-qwen3-coder-30b\\t3-big-controller\\iter3\\gen_build.py\", line 91, in <module>",
+          "    hole = cq.Workplane(\"XY\", origin=(cx, cy, post_top_z)).cylinder(-screw_depth, pilot_radius)",
+          "           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^",
+          "  File \"C:\\Users\\PC\\cad-agent\\.venv\\Lib\\site-packages\\cadquery\\cq.py\", line 4139, in cylinder",
+          "    return self.eachpoint(lambda loc: s.moved(loc), True, combine, clean)"
+        ]
+      }
+    },
+    {
+      "id": "t4-usbc-dongle",
+      "family": "enclosure",
+      "extract": {
+        "ok": true,
+        "parsed": true,
+        "attempts": 1,
+        "seconds": 2.9,
+        "error": ""
+      },
+      "codegen": {
+        "ok": false,
+        "iterations": 3,
+        "seconds": 116.7,
+        "failures_last": [
+          "verification failures:",
+          "body.load: expected 1 solid, got 5"
+        ]
+      }
+    },
+    {
+      "id": "t5-sensor-node",
+      "family": "enclosure",
+      "extract": {
+        "ok": true,
+        "parsed": true,
+        "attempts": 1,
+        "seconds": 3.7,
+        "error": ""
+      },
+      "codegen": {
+        "ok": false,
+        "iterations": 3,
+        "seconds": 126.6,
+        "failures_last": [
+          "script exited 1",
+          "stderr (tail):",
+          "Traceback (most recent call last):",
+          "  File \"C:\\Users\\PC\\cad-agent\\out\\golden\\ollama-qwen3-coder-30b\\t5-sensor-node\\iter3\\gen_build.py\", line 142, in <module>",
+          "    standoff_od = s.od()",
+          "                  ^^^^",
+          "AttributeError: 'dict' object has no attribute 'od'"
+        ]
+      }
+    },
+    {
+      "id": "t6-relay-box",
+      "family": "enclosure",
+      "extract": {
+        "ok": true,
+        "parsed": true,
+        "attempts": 1,
+        "seconds": 4.2,
+        "error": ""
+      },
+      "codegen": {
+        "ok": false,
+        "iterations": 3,
+        "seconds": 109.1,
+        "failures_last": [
+          "script exited 1",
+          "stderr (tail):",
+          "Traceback (most recent call last):",
+          "  File \"C:\\Users\\PC\\cad-agent\\out\\golden\\ollama-qwen3-coder-30b\\t6-relay-box\\iter3\\gen_build.py\", line 240, in <module>",
+          "    assembly = body.union(lid)",
+          "               ^^^^^^^^^^^^^^^",
+          "  File \"C:\\Users\\PC\\cad-agent\\.venv\\Lib\\site-packages\\cadquery\\cq.py\", line 3330, in union",
+          "    raise ValueError("
+        ]
+      }
+    },
+    {
+      "id": "t7-flat-tray",
+      "family": "enclosure",
+      "extract": {
+        "ok": true,
+        "parsed": true,
+        "attempts": 1,
+        "seconds": 4.4,
+        "error": ""
+      },
+      "codegen": {
+        "ok": false,
+        "iterations": 3,
+        "seconds": 116.8,
+        "failures_last": [
+          "verification failures:",
+          "body.load: missing file C:\\Users\\PC\\cad-agent\\out\\golden\\ollama-qwen3-coder-30b\\t7-flat-tray\\iter3\\body.step",
+          "lid.load: missing file C:\\Users\\PC\\cad-agent\\out\\golden\\ollama-qwen3-coder-30b\\t7-flat-tray\\iter3\\lid.step"
+        ]
+      }
+    },
+    {
+      "id": "t8-tall-tower",
+      "family": "enclosure",
+      "extract": {
+        "ok": true,
+        "parsed": true,
+        "attempts": 1,
+        "seconds": 2.8,
+        "error": ""
+      },
+      "codegen": {
+        "ok": false,
+        "iterations": 3,
+        "seconds": 102.3,
+        "failures_last": [
+          "verification failures:",
+          "body.bbox: max err 28.801mm (tol 0.1); got (-0.00,-0.00,-28.80)-(45.00,45.00,60.00)",
+          "post[0]: (5.5,5.5): no post material at ring(+2.4,+0.0); no post material at ring(-2.4,+0.0); no post material at ring(+0.0,+2.4)",
+          "post[1]: (39.5,5.5): no post material at ring(+2.4,+0.0); no post material at ring(-2.4,+0.0); no post material at ring(+0.0,+2.4)",
+          "post[2]: (39.5,39.5): no post material at ring(+2.4,+0.0); no post material at ring(-2.4,+0.0); no post material at ring(+0.0,+2.4)",
+          "post[3]: (5.5,39.5): no post material at ring(+2.4,+0.0); no post material at ring(-2.4,+0.0); no post material at ring(+0.0,+2.4)",
+          "cutout[0]: circle on +x: expected opening blocked at (u=22.5,z=50.0); expected opening blocked at (u=25.0,z=50.0); expected opening blocked at (u=20.0,z=50.0)",
+          "cutout[1]: circle on -x: expected opening blocked at (u=22.5,z=10.0); expected opening blocked at (u=25.0,z=10.0); expected opening blocked at (u=20.0,z=10.0)"
+        ]
+      }
+    }
+  ]
+}
