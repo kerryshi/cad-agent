@@ -344,10 +344,19 @@ uploaded over FTPS (byte-exact, 899052 bytes — first live exercise of the
 green → upload → **Kerry confirmed plate clear** (the one fact no sensor
 reports; camera liveview returned no frames on this model — separate
 toggle or different protocol, not investigated) → start → verify from
-state. Every pipeline leg is now individually proven live. Next natural
-feature: an opt-in `--send` leg on `harness.make` (preflight gate + explicit
-confirm; design the human-confirm carefully in a non-interactive CLI —
-plate-clear can never be assumed by an autonomous session).
+state. Every pipeline leg is now individually proven live.
+
+**`harness.make --send` SHIPPED (2026-07-21):** the whole product is one
+command — English → extract → codegen → verify → slice → FTPS upload →
+remote start, confirmed from printer state. `--plate-clear` is a mandatory
+per-invocation human attestation (no sensor reports an empty plate; an
+autonomous session must never pass it on its own authority); physical
+preflight expectations derive from the resolved profile chain; multi-part
+families pick `--send-part` (one plate, one part). 5 tests incl. a
+mutation check that caught the attestation test being masked by the
+ambiguous-part gate (both returned 6 — test moved to the single-part frame
+family). Suite 67 green. Live corroboration mid-f5-print: bed readback
+70.0C — the exact PETG setpoint the thermal gate exists to guarantee.
 
 **No longer blocked:** the frontier column no longer needs an API key — the
 `claude-code` backend runs on the Max plan (`python -m harness.golden
