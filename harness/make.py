@@ -18,9 +18,18 @@ Usage:
   python -m harness.make "An enclosure 80 mm long, 60 wide..." --name pi-box
   python -m harness.make "A 3-inch quad frame plate..." --family frame \
       --name micro-frame --no-slice
+  python -m harness.make "..." --family frame --name f9 --send --plate-clear
+
+The print leg (--send) uploads the staged .gcode.3mf over FTPS and remote-
+starts it, then confirms the start from printer STATE (never the publish
+ack). It hard-requires --plate-clear, a per-invocation human attestation
+that the build plate is empty — no sensor reports that, and starting onto
+a stray part crashes the toolhead. An autonomous session must never pass
+it on its own authority.
 
 Exit codes: 2 extraction refused, 3 codegen/verify failed, 4 slice refused,
-5 destination exists (use --force).
+5 destination exists (use --force), 6 send preconditions unmet,
+7 physical preflight refused, 8 upload mismatch, 9 start not confirmed.
 """
 
 from __future__ import annotations
@@ -31,12 +40,77 @@ import shutil
 import time
 from pathlib import Path
 
+import bambulabs_api as _bl
+
 from harness.backends import get_backend
 from harness.loop import extract_spec, generate_part
+from printleg import preflight as _preflight
+from printleg.ftps import PrinterFTPS
+from printleg.probe import load_credentials
+from toolchain import profiles as _profiles
 from toolchain.families import get_family
 from toolchain.slicecheck import stage_print
 
 ROOT = Path(__file__).parent.parent
+START_VERIFY_BUDGET_S = 64.0
+START_POLL_S = 8.0
+
+
+def send_print(dest: Path, part: str) -> int:
+    """Upload dest/<part>/<part>.gcode.3mf and remote-start it, verified.
+
+    Caller has already validated --plate-clear; this function gates on the
+    machine's own reported state (preflight) and confirms the start by
+    reading gcode_state + subtask_name back, per printleg/commands.py's
+    success-is-observed-state discipline.
+    """
+    gcode_3mf = dest / part / f"{part}.gcode.3mf"
+    remote_name = f"{dest.name}.gcode.3mf"
+
+    ip, code, serial = load_credentials()
+    printer = _bl.Printer(ip, code, serial)
+    printer.connect()
+    try:
+        for _ in range(20):
+            if printer.mqtt_client_ready():
+                break
+            time.sleep(0.5)
+        pre = _preflight.check(
+            printer,
+            want_filament=_profiles.expected_filament_type(),
+            want_nozzle_c=_profiles.expected_nozzle_temp(),
+        )
+        print(pre.report())
+        if not pre.ok:
+            print("REFUSED at physical preflight")
+            return 7
+
+        with PrinterFTPS(ip, code) as ftp:
+            with open(gcode_3mf, "rb") as fh:
+                ftp.storbinary(f"STOR /{remote_name}", fh)
+            local, remote = gcode_3mf.stat().st_size, ftp.size(f"/{remote_name}")
+        if remote != local:
+            print(f"REFUSED: upload size mismatch (local {local}, drive {remote})")
+            return 8
+        print(f"uploaded /{remote_name} ({remote} bytes, byte-exact)")
+
+        printer.mqtt_client.start_print_3mf(remote_name, 1, use_ams=False)
+        deadline = time.monotonic() + START_VERIFY_BUDGET_S
+        while time.monotonic() < deadline:
+            time.sleep(START_POLL_S)
+            printer.mqtt_client.pushall()
+            time.sleep(3)
+            payload = printer.mqtt_dump().get("print", {})
+            state = payload.get("gcode_state")
+            task = payload.get("subtask_name")
+            print(f"  state={state!r} task={task!r}")
+            if state in ("RUNNING", "PREPARE") and task == dest.name:
+                print("PRINT STARTED (confirmed from printer state)")
+                return 0
+        print("REFUSED: start not confirmed from state within budget")
+        return 9
+    finally:
+        printer.disconnect()
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -56,9 +130,27 @@ def main(argv: list[str] | None = None) -> int:
                    help="stop after verify (no print files staged)")
     p.add_argument("--force", action="store_true",
                    help="overwrite an existing output directory")
+    p.add_argument("--send", action="store_true",
+                   help="upload + remote-start the staged print (needs --plate-clear)")
+    p.add_argument("--plate-clear", action="store_true",
+                   help="human attestation: I looked, the build plate is empty")
+    p.add_argument("--send-part", default=None,
+                   help="which part to send for multi-part families")
     args = p.parse_args(argv)
+    if args.send and args.no_slice:
+        p.error("--send needs staged print files; drop --no-slice")
 
     fam = get_family(args.family)
+    if args.send:
+        if not args.plate_clear:
+            print("REFUSED: --send requires --plate-clear (a human must look "
+                  "at the plate; no sensor reports it)")
+            return 6
+        parts = [f.split(".")[0] for f in fam.output_files]
+        send_part = args.send_part or (parts[0] if len(parts) == 1 else None)
+        if send_part not in parts:
+            print(f"REFUSED: pick --send-part from {parts} — one plate, one part")
+            return 6
     dest = Path(args.out) / args.name
     if dest.exists() and any(dest.iterdir()) and not args.force:
         print(f"REFUSED: {dest} exists and is not empty (--force to overwrite)")
@@ -116,6 +208,9 @@ def main(argv: list[str] | None = None) -> int:
         json.dumps(manifest, indent=2), encoding="utf-8")
     print(f"staged in {dest}" + ("" if args.no_slice else
           " — copy the *.gcode.3mf to the USB drive, print from the touchscreen"))
+
+    if args.send:
+        return send_print(dest, send_part)
     return 0
 
 
