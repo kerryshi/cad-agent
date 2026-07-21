@@ -46,15 +46,16 @@ proves it.** What changed (commits f8c0845, 8813315 + results/docs):
   The e2e product CLI over this mode: `python -m harness.make "<request>"
   --name <dir>` (extract → echo spec → codegen → verify → stage → manifest;
   distinct exit codes per refusing gate).
-- **Codegen fairness column:** `qwen3-coder:30b` (MoE, 3.3B active) pulled;
-  runs at **32 tok/s** on the 5070 via partial offload. Full run IN PROGRESS
-  as a DETACHED process (session-tracked background runs kept dying with the
-  session): `out/run_coder.cmd` → `out/coder_{enclosures,frames}.log`,
-  `out/coder_done.flag` appears when both families finish (flag was deleted
-  pre-launch, so presence is proof). First data point: t1 extract PASS,
-  codegen FAIL at the 3-iter cap (186s) — the local-vs-frontier codegen gap
-  holding for a code-tuned 30B-MoE. Record the row in README + here when
-  done.
+- **Codegen fairness column (DONE 2026-07-21):** `qwen3-coder:30b` (MoE,
+  3.3B active, 32 tok/s on the 5070 via partial offload) — **extract 13/13,
+  codegen 0/13** at the 3-iter cap
+  (`results/ollama-qwen3-coder-30b*.json`). The strongest local code model
+  this GPU runs is simultaneously a perfect extractor and a 0% CadQuery
+  codegen model — the cleanest single-row statement of "local extraction,
+  frontier codegen". Run mechanics: executed as a DETACHED OS process
+  (`out/run_coder.cmd` + done-flag protocol) after five session-tracked
+  background runs died with session pauses — the detached run survived them
+  all.
 
 **CI gate (installed 2026-07-19, CI/CD PRD WS4):** merge gate + slicecheck
 skip guard, all local (no remote by choice — pre-push can never fire here).
