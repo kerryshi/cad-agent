@@ -142,7 +142,7 @@ def main(argv: list[str] | None = None) -> int:
 
     # markdown table
     title = (backend.name if extract_backend is backend
-             else f"extract={extract_backend.name} · codegen={backend.name}")
+             else f"extract={extract_backend.name} + codegen={backend.name}")
     lines = [f"\n### {title}", "",
              "| task | extract | codegen (iters) | slice |", "|---|---|---|---|"]
     ex_pass = cg_pass = 0

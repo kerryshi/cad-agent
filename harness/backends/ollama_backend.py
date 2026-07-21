@@ -24,7 +24,7 @@ class OllamaBackend:
         self.timeout = timeout
 
     def complete(self, system: str, user: str, schema: dict | None = None) -> str:
-        body: dict = {
+        req_body: dict = {
             "model": self.model,
             "stream": False,
             "messages": [
@@ -33,9 +33,9 @@ class OllamaBackend:
             ],
         }
         if schema is not None:
-            body["format"] = schema
-            body["options"] = {"temperature": 0}  # per Ollama structured-output docs
-        payload = json.dumps(body).encode("utf-8")
+            req_body["format"] = schema
+            req_body["options"] = {"temperature": 0}  # per Ollama structured-output docs
+        payload = json.dumps(req_body).encode("utf-8")
         req = urllib.request.Request(
             f"{self.base_url}/api/chat", data=payload,
             headers={"Content-Type": "application/json"},

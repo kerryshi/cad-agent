@@ -7,6 +7,7 @@ script through the real sandbox + verify.
 
 import json
 
+import pydantic
 import pytest
 
 from harness.backends.scripted import ScriptedBackend
@@ -258,6 +259,37 @@ def test_golden_hybrid_uses_extract_backend(monkeypatch, tmp_path):
     assert out["backend"] == "claude-code"
 
 
+def test_golden_hybrid_routes_codegen_to_codegen_backend(monkeypatch, tmp_path):
+    # pins the full-stage routing: extract calls land on the extract backend,
+    # codegen calls (and only those) on the codegen backend
+    import harness.golden as golden
+
+    task = {"id": "mini", "request": "a 40x40x20 box, all defaults",
+            "expected": {"length": 40, "width": 40, "height": 20}}
+    tasks_file = tmp_path / "mini_tasks.json"
+    tasks_file.write_text(json.dumps([task]), encoding="utf-8")
+
+    backends = {}
+
+    def fake_get_backend(kind, model=None):
+        responses = {"ollama": ['{"length": 40, "width": 40, "height": 20}'],
+                     "claude-code": [GOOD_SCRIPT]}[kind]
+        backends[kind] = ScriptedBackend(responses, name=kind)
+        return backends[kind]
+
+    monkeypatch.setattr(golden, "get_backend", fake_get_backend)
+    monkeypatch.setattr(golden, "ROOT", tmp_path)
+
+    rc = golden.main(["--backend", "claude-code", "--extract-backend", "ollama",
+                      "--stage", "both", "--tasks", str(tasks_file)])
+    assert rc == 0
+    assert len(backends["ollama"].calls) == 1
+    assert backends["ollama"].schemas == [EnclosureSpec.model_json_schema()]
+    assert len(backends["claude-code"].calls) == 1
+    assert "cadquery" in backends["claude-code"].calls[0][0]  # codegen system prompt
+    assert backends["claude-code"].schemas == [None]
+
+
 # ---- golden set integrity ----
 
 def test_golden_tasks_load_and_validate():
@@ -291,6 +323,12 @@ def test_canonical_dump_resolves_derived_standoff_od():
     wrong["standoffs"][0]["outer_diameter"] = 7.5
     other = fam.spec_cls.model_validate(wrong)
     assert not approx_equal(fam.dump_canonical(other), fam.dump_canonical(expected))
+
+    # 0 must refuse loudly, not silently fold into "derive" via `or` truthiness
+    zero = deepcopy(base)
+    zero["standoffs"][0]["outer_diameter"] = 0
+    with pytest.raises(pydantic.ValidationError):
+        fam.spec_cls.model_validate(zero)
 
 
 def test_approx_equal_semantics():

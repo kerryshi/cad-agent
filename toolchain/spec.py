@@ -65,7 +65,7 @@ class Standoff(BaseModel):
     y: MM
     height: MM = Field(gt=0)
     screw: Screw = Screw.M2_5
-    outer_diameter: MM | None = None  # default: pilot + 3.2 (1.6mm wall around hole)
+    outer_diameter: MM | None = Field(default=None, gt=0)  # None: pilot + 3.2 (1.6mm wall)
 
     def od(self) -> MM:
         return self.outer_diameter or SCREWS[self.screw].pilot + 3.2
