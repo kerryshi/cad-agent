@@ -337,5 +337,6 @@ verify.py); cutout checks cross-talk with wall defects (observed, harmless).
 **Last updated:** 2026-07-21 (local extraction shipped: schema-constrained
 ollama backend, hybrid golden mode, harness.make e2e CLI, oracle
 canonicalization + gt=0; llama3.1:8b crowned local extractor 13/13; hybrid
-final config 13/13 all-iter-1 all-sliced; qwen3-coder:30b fairness run
-detached-in-progress. Prior: 2026-07-20 f5 task + sonnet-vs-haiku gap).
+final config 13/13 all-iter-1 all-sliced; qwen3-coder:30b fairness row DONE:
+extract 13/13, codegen 0/13. Prior: 2026-07-20 f5 task + sonnet-vs-haiku
+gap).
