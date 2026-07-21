@@ -11,7 +11,7 @@ from __future__ import annotations
 import json
 import urllib.request
 
-DEFAULT_MODEL = "qwen3:4b"  # best measured extractor (2026-07-20): 7/8 + 5/5 constrained
+DEFAULT_MODEL = "llama3.1:8b"  # best measured extractor (2026-07-21): 8/8 + 5/5 constrained
 DEFAULT_URL = "http://localhost:11434"
 
 
