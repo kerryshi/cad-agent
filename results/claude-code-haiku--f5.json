@@ -1,0 +1,32 @@
+{
+  "backend": "claude-code:haiku",
+  "stage": "both",
+  "max_iterations": 3,
+  "rows": [
+    {
+      "id": "f5-3inch-25mount",
+      "family": "frame",
+      "extract": {
+        "ok": true,
+        "parsed": true,
+        "attempts": 1,
+        "seconds": 14.8,
+        "error": ""
+      },
+      "codegen": {
+        "ok": false,
+        "iterations": 3,
+        "seconds": 372.5,
+        "failures_last": [
+          "script exited 1",
+          "stderr (tail):",
+          "Traceback (most recent call last):",
+          "  File \"C:\\Users\\PC\\cad-agent\\out\\golden\\claude-code-haiku--f5\\f5-3inch-25mount\\iter3\\gen_build.py\", line 83, in <module>",
+          "    arm = arm.rotateZ(angle)",
+          "          ^^^^^^^^^^^",
+          "AttributeError: 'Workplane' object has no attribute 'rotateZ'. Did you mean: 'rotate'?"
+        ]
+      }
+    }
+  ]
+}

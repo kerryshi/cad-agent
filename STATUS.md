@@ -69,8 +69,14 @@ exactly one field (`fc_mount`); validated through the real `model_validator`
 Golden agent run (claude-code:sonnet, 2026-07-20): **extract PASS, codegen
 PASS iter=1** — verifier accepted the LLM's CadQuery first try, zero failures
 (`failures_last: []`); slice ok 39.6 min/20/10.79 cm³, matching the reference.
-Evidence: `results/claude-code-sonnet--f5.json`. The frame family is now
-effectively 5/5 for sonnet; the golden set is 5 frame tasks.
+Evidence: `results/claude-code-sonnet--f5.json` (frame family now effectively
+5/5 for sonnet). **claude-code:haiku, same task / same sandbox**
+(2026-07-20): extract PASS, codegen **FAIL at the 3-iter cap** — final error a
+hallucinated CadQuery API (`'Workplane' object has no attribute 'rotateZ'`,
+iter3), never recovered; no slice (`results/claude-code-haiku--f5.json`). The
+1-iter PASS (sonnet) vs cap-FAIL (haiku) split on identical input is a cleaner
+same-task artifact than the externally-stopped enclosure Haiku column above.
+The golden set is 5 frame tasks.
 
 **PRINT FILES STAGED for Kerry** (gitignored, `prints/`): agent-generated,
 probe-verified, PETG-sliced, **re-staged 2026-07-19** after the profile-
@@ -270,4 +276,4 @@ though `claude -p` can Read PNGs and may cover that too — untested).
 **Open questions:** verify's oracles assume cooperative codegen (documented in
 verify.py); cutout checks cross-talk with wall defects (observed, harmless).
 
-**Last updated:** 2026-07-20 (f5-3inch-25mount variant added, PETG-staged, and agent-run 1/1 via claude-code:sonnet; prior: 2026-07-19 merge gate + skip guard installed, refuse-first proven).
+**Last updated:** 2026-07-20 (f5-3inch-25mount added, PETG-staged, agent-run: sonnet 1/1 PASS vs haiku codegen FAIL at cap; prior: 2026-07-19 merge gate + skip guard installed, refuse-first proven).
