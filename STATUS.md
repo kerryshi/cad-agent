@@ -1,5 +1,61 @@
 # cad-agent — STATUS
 
+**DELEGATION (Kerry, 2026-07-20): full control granted to complete the
+project; the bar is "a product worth buying, despite it not being a product."**
+
+**LOCAL EXTRACTION SHIPPED (2026-07-21, branch `local-extract`): the hybrid
+mode is real — local model extracts, frontier model codes, one benchmark row
+proves it.** What changed (commits f8c0845, 8813315 + results/docs):
+- **Backend protocol carries an optional `schema`**; the ollama backend maps
+  it to `format` (constrained decoding) + temperature 0. Extraction offers the
+  family spec's JSON schema; **codegen stays unconstrained** (no new info
+  channel; actor≠verifier untouched). Other backends ignore the param — it
+  restates the pydantic source already in the prompt.
+- **`harness.golden --extract-backend/--extract-model`** routes the extract
+  stage to a different backend; results land in a `hybrid--` namespace with
+  both backend names recorded.
+- **Oracle fixes:** `Family.dump_canonical` resolves derived-optional fields
+  (standoff `outer_diameter=None` → `od()`) before spec comparison — a model
+  stating the exact derived value no longer scores FAIL (t3 was a false
+  negative). Reviewer round added `gt=0` on `outer_diameter` (0 used to fold
+  silently into "derive" via `or`-truthiness; now refuses at validation,
+  watched red first). 5+2 new tests, suite 54 green.
+- **Model selection was measured, not researched-and-trusted.** Web research
+  (two subagent sweeps, July 2026) nominated `qwen3-4b-instruct-2507` as the
+  structured-extraction pick; on our golden set it scored **1/8** — under the
+  schema grammar it emits the minimal valid object and drops every stated
+  standoff/cutout array, while freeform it extracts them fine
+  (`results/ollama-qwen3-4b-instruct-2507-q4_K_M.json`, kept as the negative
+  exhibit). The reported thinking+format Ollama bugs (#10929/#15260) do NOT
+  reproduce on installed Ollama 0.32.1. **Winner: llama3.1:8b + schema — 8/8
+  enclosures (stable ×2 runs) + 5/5 frames**, vs its own 5/8 freeform
+  baseline (5/8→7-8/8 is the isolated decode-config effect; cutout-bearing
+  tasks t1/t4/t5/t6/t8 exercise the anyOf/$defs schema branch under
+  constraint). qwen3:4b: 6/8 + 5/5 (t1 stable miss: attributes the
+  standoffs' M2.5 to the box screw; t4 boundary-flips across prompt text).
+  `DEFAULT_MODEL` is now llama3.1:8b. Extraction sits at ~15-30s/task local
+  vs ~2-4s claude — free and private vs fast.
+- **Hybrid golden rows (the product artifact):** qwen3:4b-extract hybrid
+  (first config): enclosures 7/8 extract + **8/8 codegen all iter=1** + all
+  parts sliced; frames **5/5 + 5/5** (f3 legitimately used the feedback loop,
+  iter=2) — and t1's wrong local extraction was CAUGHT by the exact-compare
+  gate, not silently passed downstream. Final config
+  (llama3.1:8b extract + sonnet codegen, 2026-07-21): **enclosures 8/8 + 8/8,
+  frames 5/5 + 5/5, every codegen iter=1, all 21 part slices thermally gated
+  ok** (`results/hybrid--ollama-llama3_1-8b--claude-code-sonnet*.json`).
+  The e2e product CLI over this mode: `python -m harness.make "<request>"
+  --name <dir>` (extract → echo spec → codegen → verify → stage → manifest;
+  distinct exit codes per refusing gate).
+- **Codegen fairness column:** `qwen3-coder:30b` (MoE, 3.3B active) pulled;
+  runs at **32 tok/s** on the 5070 via partial offload. Full run IN PROGRESS
+  as a DETACHED process (session-tracked background runs kept dying with the
+  session): `out/run_coder.cmd` → `out/coder_{enclosures,frames}.log`,
+  `out/coder_done.flag` appears when both families finish (flag was deleted
+  pre-launch, so presence is proof). First data point: t1 extract PASS,
+  codegen FAIL at the 3-iter cap (186s) — the local-vs-frontier codegen gap
+  holding for a code-tuned 30B-MoE. Record the row in README + here when
+  done.
+
 **CI gate (installed 2026-07-19, CI/CD PRD WS4):** merge gate + slicecheck
 skip guard, all local (no remote by choice — pre-push can never fire here).
 - **Mechanism:** `.githooks/pre-merge-commit` runs
@@ -33,14 +89,11 @@ skip guard, all local (no remote by choice — pre-push can never fire here).
 **Where we are:** Phases A (toolchain) and B (harness) complete. Phase C:
 renderer DONE; VLM critique shelved on an honest negative result (see below).
 Phase D part 1 DONE: headless OrcaSlicer slice check with bundled P2S
-profiles. **Golden benchmark headline (2026-07-17):**
-
-| backend | extract | codegen |
-|---|---|---|
-| ollama:llama3.1:8b | 5/8 | 0/8 (all hit the 3-iter cap) |
-| claude-code:sonnet | **8/8** | **8/8 (every task iter=1)** |
-
-Same tasks, same sandbox, same verifier — the pass-rate gap is the artifact.
+profiles; slice stats are a reporting column in golden (verify remains the
+gate). **Benchmark headline lives in README.md now (2026-07-21)** — hybrid
+"local extraction, frontier codegen" is the production mode; the 07-17
+llama-freeform 5/8+0/8 vs sonnet 8/8+8/8 table is superseded by the fuller
+README table (freeform vs schema-constrained vs hybrid rows).
 Sonnet runs via the `claude -p` adapter on the Max plan (no API key needed).
 Its t1 part renders visually identical to the reference builder's output.
 
@@ -171,8 +224,9 @@ Phase-0 spike in a parallel session (gates only the auto-print leg).
 anthropic 0.117.0, pytest. **OrcaSlicer 2.4.2 portable** at
 `C:\Users\PC\tools\OrcaSlicer` (winget install fails silently from a
 background shell — UAC 0x800704c7; portable build needs no elevation;
-`CAD_AGENT_ORCA` env var overrides the path). Ollama up (llama3.1:8b,
-qwen3:4b, qwen2.5vl:7b).
+`CAD_AGENT_ORCA` env var overrides the path). Ollama 0.32.1 up (llama3.1:8b,
+qwen3:4b, qwen3:4b-instruct-2507-q4_K_M, qwen3-coder:30b, qwen2.5-coder:14b,
+qwen2.5vl:7b).
 
 **Phase C/D additions (2026-07-17):**
 - `toolchain/render.py` — VTK offscreen multi-view PNGs (4 body + 2 lid views),
@@ -262,18 +316,25 @@ though `claude -p` can Read PNGs and may cover that too — untested).
 
 **Next actions:**
 1. **First physical print** — `prints/f2-3inch-micro/` is the cheaper first
-   run (39.5 min, 10.8 cm³). microSD → touchscreen. Confirm the Textured PEI
+   run (39.5 min, 10.8 cm³). USB drive → touchscreen. Confirm the Textured PEI
    plate is installed and PETG is loaded before starting. Then measure hole
    fit vs spec (fit_clearance=0.2 is a guess until measured) and report back —
    the thermal gate proves profile coherence, not print quality.
-2. Wire slicecheck into the golden runner as a printability column (verify
-   remains the gate; slice stats are reporting).
-3. Optional fairness column: `qwen2.5-coder:14b` (code-tuned local model);
-   optional `--model haiku` / `opus` claude-code rows.
-4. Printer spike in a parallel session once Developer Mode is on (BLOCKED).
+2. ~~Wire slicecheck into the golden runner~~ DONE (slice column, reporting
+   only).
+3. ~~Fairness column~~ qwen3-coder:30b run recorded (see top block);
+   optional `--model haiku` / `opus` claude-code rows remain optional.
+4. Printer spike in a parallel session (light toggle is the fork test — see
+   OPEN above).
 5. Revisit VLM critique via `claude -p` with Read access to the render PNGs.
+6. End-to-end demo path: one command from English sentence → staged print
+   dir via the hybrid mode (the "product" wrapper over golden's pieces).
 
 **Open questions:** verify's oracles assume cooperative codegen (documented in
 verify.py); cutout checks cross-talk with wall defects (observed, harmless).
 
-**Last updated:** 2026-07-20 (f5-3inch-25mount added, PETG-staged, agent-run: sonnet 1/1 PASS vs haiku codegen FAIL at cap; prior: 2026-07-19 merge gate + skip guard installed, refuse-first proven).
+**Last updated:** 2026-07-21 (local extraction shipped: schema-constrained
+ollama backend, hybrid golden mode, harness.make e2e CLI, oracle
+canonicalization + gt=0; llama3.1:8b crowned local extractor 13/13; hybrid
+final config 13/13 all-iter-1 all-sliced; qwen3-coder:30b fairness run
+detached-in-progress. Prior: 2026-07-20 f5 task + sonnet-vs-haiku gap).
