@@ -319,14 +319,23 @@ pending: M2 screw fit in FC holes (fit_clearance=0.2 was a guess until
 measured), plate flatness, arm stiffness. Report measurements back into the
 spec when done.
 
-**Auto-print leg — writes still dropped WITH dev mode on (2026-07-21):**
-Kerry enabled Developer Mode; light toggle retested → still no-op (returns
-True, state unchanged against fresh pushall; reads live and accurate — the
-same payload correctly reported the finished print). Next discriminator:
-**power-cycle the printer** (auth-control changes commonly need a restart),
-then re-run the light test. If still dead post-reboot, the working theory
-becomes N7 command schema ≠ what bambulabs_api publishes — investigate by
-reading the raw request topic, not by trusting the library.
+**AUTO-PRINT LEG UNBLOCKED (2026-07-21): the two-day "writes are dropped"
+mystery was a malformed library payload, not the printer.** bambulabs_api
+2.6.6's `turn_light_on/off` publish `{"system": {"led_mode": ...}}` — no
+`command` field — which the firmware silently ignores; the library returns
+the BROKER ack as success, hence "returns True and does nothing." A raw
+publish of the full documented ledctrl envelope toggled the chamber light
+live (off → on → restored off), with dev mode on. Fix shipped as
+`printleg/commands.py` (`ledctrl_payload` + `set_chamber_light`, which
+reports success only from observed pushall state, never the ack; payload
+tests in `tests/test_printleg.py`). Checked the library's `start_print_3mf`:
+its `project_file` envelope IS well-formed — the start channel should work
+as-is (with `use_ams=False` for the external spool, per the 07-20 finding).
+**Deliberately NOT tested:** an actual remote `start_print` — never start a
+print unattended, and the finished f2 is still on the plate. First remote
+print happens in a Kerry-present session, after preflight, with the plate
+clear. Whether dev-mode-off ALSO gated writes earlier is now untestable
+history (the light payload was malformed in every pre-fix test).
 
 **No longer blocked:** the frontier column no longer needs an API key — the
 `claude-code` backend runs on the Max plan (`python -m harness.golden
