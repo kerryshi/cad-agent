@@ -23,7 +23,9 @@ class ClaudeCodeBackend:
         if not self._exe:
             raise RuntimeError("claude CLI not found on PATH")
 
-    def complete(self, system: str, user: str) -> str:
+    def complete(self, system: str, user: str, schema: dict | None = None) -> str:
+        # schema unused: no decode-level constraint channel in `claude -p`, and
+        # the prompt already embeds the pydantic source it restates
         proc = subprocess.run(
             [self._exe, "-p", "--output-format", "text",
              "--model", self.model, "--append-system-prompt", system],

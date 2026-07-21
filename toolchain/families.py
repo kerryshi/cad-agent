@@ -26,6 +26,20 @@ class Family:
     design_summary: str  # geometry walkthrough for the codegen prompt
     build: Callable  # reference builder: (spec, out_dir, sabotage=None)
     verify: Callable  # (spec, out_dir) -> Report
+    canon: Callable | None = None  # spec -> comparison dict; None = plain dump
+
+    def dump_canonical(self, spec) -> dict:
+        """Dump for spec equality: derived-optional fields resolved to their
+        derived values (from the frozen spec, never the model under test), so
+        two specs that build the identical part compare equal."""
+        return self.canon(spec) if self.canon else spec.model_dump(mode="json")
+
+
+def _enclosure_canon(spec) -> dict:
+    d = spec.model_dump(mode="json")
+    for standoff, entry in zip(spec.standoffs, d["standoffs"]):
+        entry["outer_diameter"] = standoff.od()  # None means "derive": resolve it
+    return d
 
 
 ENCLOSURE = Family(
@@ -55,6 +69,7 @@ ENCLOSURE = Family(
     ),
     build=reference.build,
     verify=verify.verify,
+    canon=_enclosure_canon,
 )
 
 FRAME = Family(

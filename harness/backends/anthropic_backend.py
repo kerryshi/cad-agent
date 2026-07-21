@@ -20,7 +20,8 @@ class AnthropicBackend:
         self.max_tokens = max_tokens
         self._client = anthropic.Anthropic()
 
-    def complete(self, system: str, user: str) -> str:
+    def complete(self, system: str, user: str, schema: dict | None = None) -> str:
+        # schema unused — same rationale as claude_code.py
         response = self._client.messages.create(
             model=self.model,
             max_tokens=self.max_tokens,

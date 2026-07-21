@@ -1,8 +1,9 @@
 """Ollama backend (local models via localhost:11434, stdlib HTTP only).
 
-Local 4B/8B models will score low on CadQuery codegen — this backend exists to
-prove the peer-agent contract (any model can drive the same toolchain), not to
-claim quality parity.
+Division of labour (measured, not assumed): local models are a genuine peer
+for EXTRACTION — with `schema` they decode under the spec's JSON schema
+(Ollama `format`, temperature 0), which guarantees shape but not values —
+while CadQuery codegen stays the honest local-vs-frontier gap column.
 """
 
 from __future__ import annotations
@@ -10,7 +11,7 @@ from __future__ import annotations
 import json
 import urllib.request
 
-DEFAULT_MODEL = "llama3.1:8b"
+DEFAULT_MODEL = "qwen3:4b"  # best measured extractor (2026-07-20): 7/8 + 5/5 constrained
 DEFAULT_URL = "http://localhost:11434"
 
 
@@ -22,15 +23,19 @@ class OllamaBackend:
         self.base_url = base_url.rstrip("/")
         self.timeout = timeout
 
-    def complete(self, system: str, user: str) -> str:
-        payload = json.dumps({
+    def complete(self, system: str, user: str, schema: dict | None = None) -> str:
+        body: dict = {
             "model": self.model,
             "stream": False,
             "messages": [
                 {"role": "system", "content": system},
                 {"role": "user", "content": user},
             ],
-        }).encode("utf-8")
+        }
+        if schema is not None:
+            body["format"] = schema
+            body["options"] = {"temperature": 0}  # per Ollama structured-output docs
+        payload = json.dumps(body).encode("utf-8")
         req = urllib.request.Request(
             f"{self.base_url}/api/chat", data=payload,
             headers={"Content-Type": "application/json"},
