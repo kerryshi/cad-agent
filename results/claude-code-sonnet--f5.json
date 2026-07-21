@@ -1,0 +1,33 @@
+{
+  "backend": "claude-code:sonnet",
+  "stage": "both",
+  "max_iterations": 3,
+  "rows": [
+    {
+      "id": "f5-3inch-25mount",
+      "family": "frame",
+      "extract": {
+        "ok": true,
+        "parsed": true,
+        "attempts": 1,
+        "seconds": 11.6,
+        "error": ""
+      },
+      "codegen": {
+        "ok": true,
+        "iterations": 1,
+        "seconds": 98.8,
+        "failures_last": []
+      },
+      "slice": [
+        {
+          "part": "frame",
+          "ok": true,
+          "minutes": 39.6,
+          "layers": 20,
+          "cm3": 10.79
+        }
+      ]
+    }
+  ]
+}
