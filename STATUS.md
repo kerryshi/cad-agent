@@ -3,6 +3,43 @@
 **DELEGATION (Kerry, 2026-07-20): full control granted to complete the
 project; the bar is "a product worth buying, despite it not being a product."**
 
+**REVIEW-BEFORE-PRINT SHIPPED (2026-07-21, branch `review-page`): every build
+stages a human review surface, and the printer is gated on the verdict.**
+Kerry ruling 2026-07-21: static per-build page, verdict-only (revisions stay
+conversational), hard gate on send.
+- `harness.make` now renders every part (per-family view specs via
+  `Family.part_views`; new `toolchain.render.render_build` — the old
+  renderer only knew the enclosure body/lid contract) and writes a
+  self-contained `review.html` into the build dir: renders embedded as data
+  URIs, spec echo, backends/iterations, slice stats, verdict badge.
+- Verdicts are CLI attestations (`python -m harness.review <dir> --approve` /
+  `--reject --comment "..."`) — a static page cannot write files, and the
+  shape matches `--plate-clear`: the human ran the command having looked.
+  Rejection REQUIRES a comment; the comment is the revision request brought
+  back to the agent.
+- **Approval is hash-bound** (sha256 over staged .step + .gcode.3mf): any
+  rebuild or re-slice makes it STALE and the gate refuses again. The
+  approve-then-slice hole (gcode staged after the verdict never seen by the
+  reviewer) is also refused — tested.
+- `send_print` moved to `harness/send.py` with its own CLI (`python -m
+  harness.send <dir> --plate-clear [--part X]`); refuses at **exit 10** (new
+  ledger entry) without a current approval. `make --send` still stages
+  everything, then refuses at the gate with the exact next commands —
+  one-shot build-and-send is impossible by design (an approval can only
+  exist after the artifacts do). make's early plate-clear check moved to the
+  send leg; part-choice validation still fires pre-spend. Existing send
+  tests re-target `harness.send`.
+- Fail-first: the new tests were watched red (missing modules / gate cases)
+  before implementation. Suite **80 green** (was 67), 37.9s — renders in the
+  make e2e tests account for the growth over the 27.1s noted in the CI
+  block; the merge gate absorbs it.
+- Evidence: real hybrid run at `out/demo-review` (f5-style request) —
+  extraction correct incl. the 25.5x25.5-M2 FC mount, codegen iter=1,
+  sliced 39.6 min / 20 layers / 10.79 cm3, 3 renders, 76KB self-contained
+  page; live `harness.send out/demo-review --plate-clear` REFUSED exit 10
+  with remediation text. Left PENDING on purpose — the first real verdict is
+  Kerry's to record after opening the page.
+
 **LOCAL EXTRACTION SHIPPED (2026-07-21, branch `local-extract`): the hybrid
 mode is real — local model extracts, frontier model codes, one benchmark row
 proves it.** What changed (commits f8c0845, 8813315 + results/docs):
@@ -377,13 +414,17 @@ though `claude -p` can Read PNGs and may cover that too — untested).
 4. Printer spike in a parallel session (light toggle is the fork test — see
    OPEN above).
 5. Revisit VLM critique via `claude -p` with Read access to the render PNGs.
-6. End-to-end demo path: one command from English sentence → staged print
-   dir via the hybrid mode (the "product" wrapper over golden's pieces).
+6. ~~End-to-end demo path~~ DONE (`harness.make`), now with the review loop:
+   make → open review.html → `harness.review --approve|--reject` →
+   `harness.send --plate-clear`. **Kerry: open `out/demo-review/review.html`
+   and record the first real verdict.**
 
 **Open questions:** verify's oracles assume cooperative codegen (documented in
 verify.py); cutout checks cross-talk with wall defects (observed, harmless).
 
-**Last updated:** 2026-07-21 (local extraction shipped: schema-constrained
+**Last updated:** 2026-07-21 (review-before-print shipped: per-build
+review.html + hash-bound verdict + send gate at exit 10; harness.send CLI
+split out; suite 80 green. Earlier same day: local extraction shipped: schema-constrained
 ollama backend, hybrid golden mode, harness.make e2e CLI, oracle
 canonicalization + gt=0; llama3.1:8b crowned local extractor 13/13; hybrid
 final config 13/13 all-iter-1 all-sliced; qwen3-coder:30b fairness row DONE:

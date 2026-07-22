@@ -71,8 +71,20 @@ standoffs at (25,20) and (55,40)..." --name pi-box
 ```
 Extracts locally (schema-constrained), echoes the spec for a human check,
 generates with sonnet, verifies against the frozen spec, and stages
-thermally-gated print files + a manifest under `prints/pi-box/`. Every gate
-refuses loudly with its own exit code.
+thermally-gated print files + multi-view renders + a self-contained
+`review.html` under `prints/pi-box/`. Every gate refuses loudly with its own
+exit code.
+
+**Review before print** — the printer is gated on a human verdict recorded
+after looking at the build:
+```
+start prints/pi-box/review.html                 # look at what it made
+python -m harness.review prints/pi-box --approve       # or --reject --comment "..."
+python -m harness.send prints/pi-box --plate-clear     # refused without approval
+```
+The approval is hash-bound to the staged artifacts — any rebuild or re-slice
+makes it stale and the send refuses again. A rejection requires a comment;
+that comment is the revision request you take back to the agent.
 
 **Dev:** Python 3.12 (`py -3.12 -m venv .venv`), `pip install cadquery
 pydantic pytest trimesh anthropic`, `python -m pytest tests/`. Golden runs:

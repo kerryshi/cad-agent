@@ -37,6 +37,12 @@ LID_VIEWS = {
     "top": ((0, 0, 1), (0, 1, 0)),
     "iso": ((1, 1, 1), (0, 0, 1)),
 }
+# flat plate-like parts (frames): one oblique, one true-top, one edge-on
+PLATE_VIEWS = {
+    "iso": ((1, 1, 0.8), (0, 0, 1)),
+    "top": ((0, 0, 1), (0, 1, 0)),
+    "front": ((0, -1, 0.1), (0, 0, 1)),
+}
 
 
 def render_solid(shape: cq.Shape, out_dir: Path, prefix: str,
@@ -83,6 +89,29 @@ def render_solid(shape: cq.Shape, out_dir: Path, prefix: str,
         writer.SetInputConnection(w2i.GetOutputPort())
         writer.Write()
         written.append(path)
+    return written
+
+
+def render_build(build_dir: Path, family, out_dir: Path | None = None) -> list[Path]:
+    """Render every staged part of a build per the family's view specs.
+
+    Strict counterpart to render_workdir: a missing part file raises — in a
+    staged build the output contract guarantees the files, so absence is a
+    defect, not a case to skip past.
+    """
+    build_dir = Path(build_dir)
+    out_dir = Path(out_dir) if out_dir else build_dir / "renders"
+    written = []
+    for filename in family.output_files:
+        path = build_dir / filename
+        if not path.is_file():
+            raise FileNotFoundError(f"staged part missing: {path}")
+        prefix = filename.split(".")[0]
+        views = family.part_views[filename]
+        solids = cq.importers.importStep(str(path)).solids().vals()
+        if not solids:
+            raise ValueError(f"no solids in {path}")
+        written.extend(render_solid(solids[0], out_dir, prefix, views))
     return written
 
 
