@@ -8,11 +8,12 @@ agnostic and dispatches through this table.
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Callable
 
 from toolchain import frame_reference, frame_verify, reference, verify
 from toolchain.frame import FRAME_STEP, FrameSpec
+from toolchain.render import BODY_VIEWS, LID_VIEWS, PLATE_VIEWS
 from toolchain.spec import BODY_STEP, LID_STEP, EnclosureSpec
 
 
@@ -26,6 +27,9 @@ class Family:
     design_summary: str  # geometry walkthrough for the codegen prompt
     build: Callable  # reference builder: (spec, out_dir, sabotage=None)
     verify: Callable  # (spec, out_dir) -> Report
+    # excluded from eq/hash: families are singletons and prompts.py lru_caches
+    # on the Family itself — an unhashable dict field would break that
+    part_views: dict = field(compare=False)  # output file -> render view dict
     canon: Callable | None = None  # spec -> comparison dict; None = plain dump
 
     def dump_canonical(self, spec) -> dict:
@@ -69,6 +73,7 @@ ENCLOSURE = Family(
     ),
     build=reference.build,
     verify=verify.verify,
+    part_views={BODY_STEP: BODY_VIEWS, LID_STEP: LID_VIEWS},
     canon=_enclosure_canon,
 )
 
@@ -97,6 +102,7 @@ FRAME = Family(
     ),
     build=frame_reference.build,
     verify=frame_verify.verify_frame,
+    part_views={FRAME_STEP: PLATE_VIEWS},
 )
 
 FAMILIES: dict[str, Family] = {f.name: f for f in (ENCLOSURE, FRAME)}

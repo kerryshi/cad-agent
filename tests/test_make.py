@@ -1,18 +1,25 @@
-"""make.py e2e tests — scripted backends, no live models, no slicer needed.
+"""make.py + send.py e2e tests — scripted backends, no live models, no slicer.
 
 The sandbox + verify path runs for real (GOOD_SCRIPT through the runner);
 the slice stage is pinned by monkeypatching stage_print so the tests are
-Orca-free. Each refusal gate is fed input it must refuse.
+Orca-free. Each refusal gate is fed input it must refuse. The send stack
+(printer, FTPS, preflight) is faked at the harness.send module boundary.
 """
 
 import json
+import types
 from pathlib import Path
 
 import harness.make as make
+import harness.review as hreview
+import harness.send as hsend
 from harness.backends.scripted import ScriptedBackend
-from tests.test_harness import CRASHING_SCRIPT, GOOD_SCRIPT
+from tests.test_harness import CRASHING_SCRIPT, FRAME_GOOD_SCRIPT, GOOD_SCRIPT
 
 SPEC_JSON = '{"length": 40, "width": 40, "height": 20}'
+FRAME_SPEC_JSON = ('{"wheelbase": 140, "plate_thickness": 4, "arm_width": 12,'
+                   ' "body_width": 36, "fc_mount": "20x20-M2",'
+                   ' "motor_mount": "12x12-M2"}')
 
 
 def _patch_backends(monkeypatch, extract_responses, codegen_responses):
@@ -27,6 +34,24 @@ def _patch_backends(monkeypatch, extract_responses, codegen_responses):
     return made
 
 
+def _patch_stage(monkeypatch):
+    from toolchain.slicecheck import SliceResult
+
+    staged = []
+
+    def fake_stage(step, dest, part="part"):
+        staged.append((Path(step).name, part))
+        gcode_dir = Path(dest)
+        gcode_dir.mkdir(parents=True, exist_ok=True)
+        (gcode_dir / f"{part}.gcode.3mf").write_bytes(b"fake gcode " + part.encode())
+        r = SliceResult(part, True, "ok")
+        r.minutes, r.layers, r.filament_cm3 = 10.0, 5, 1.0
+        return r
+
+    monkeypatch.setattr(make, "stage_print", fake_stage)
+    return staged
+
+
 def test_make_happy_path_no_slice(monkeypatch, tmp_path):
     made = _patch_backends(monkeypatch, [SPEC_JSON], [GOOD_SCRIPT])
     rc = make.main(["a 40 box", "--name", "t", "--out", str(tmp_path), "--no-slice"])
@@ -39,6 +64,12 @@ def test_make_happy_path_no_slice(monkeypatch, tmp_path):
     assert m["slices"] == []
     assert made["ollama"].schemas[0] is not None  # constrained extraction
     assert made["claude-code"].schemas == [None]  # unconstrained codegen
+    # the review surface is part of every build
+    renders = list((dest / "renders").glob("*.png"))
+    assert renders, "no renders staged"
+    page = (dest / "review.html").read_text(encoding="utf-8")
+    assert "PENDING" in page
+    assert page.count("data:image/png;base64,") == len(renders)
 
 
 def test_make_refuses_bad_extraction(monkeypatch, tmp_path):
@@ -65,30 +96,26 @@ def test_make_refuses_existing_dest(monkeypatch, tmp_path):
     assert (tmp_path / "t" / "keep.txt").read_text() == "precious"
 
 
-def test_send_refuses_without_plate_clear(monkeypatch, tmp_path):
-    # the attestation gate fires BEFORE any model or printer work; frame
-    # family on purpose - single-part, so no OTHER send gate can also
-    # return 6 and mask this one (a mutation check caught exactly that)
-    _patch_backends(monkeypatch, ['{"wheelbase": 140}'], [GOOD_SCRIPT])
+def test_make_send_refuses_pending_review(monkeypatch, tmp_path):
+    # --send may not start a print the reviewer never saw: the build must be
+    # fully staged (reviewable), then refused at the review gate
+    _patch_backends(monkeypatch, [FRAME_SPEC_JSON], [FRAME_GOOD_SCRIPT])
+    _patch_stage(monkeypatch)
     rc = make.main(["a frame", "--family", "frame", "--name", "t",
-                    "--out", str(tmp_path), "--send"])
-    assert rc == 6
-    assert not (tmp_path / "t").exists(), "refused before any work"
+                    "--out", str(tmp_path), "--send", "--plate-clear"])
+    assert rc == 10
+    dest = tmp_path / "t"
+    assert (dest / "frame.step").is_file(), "build must survive the refusal"
+    assert (dest / "review.html").is_file(), "the thing to review must exist"
 
 
 def test_send_refuses_ambiguous_part(monkeypatch, tmp_path):
+    # fires BEFORE any model spend - a wrong flag must not cost a codegen run
     _patch_backends(monkeypatch, [SPEC_JSON], [GOOD_SCRIPT])
     rc = make.main(["a box", "--name", "t", "--out", str(tmp_path),
                     "--send", "--plate-clear"])  # enclosure = body AND lid
     assert rc == 6
-
-
-class _FakePrintInfo:
-    def wait_for_publish(self):
-        pass
-
-    def is_published(self):
-        return True
+    assert not (tmp_path / "t").exists(), "refused before any work"
 
 
 class _FakeSendPrinter:
@@ -147,14 +174,12 @@ class _FakeFTPS:
 
 
 def _patch_send_stack(monkeypatch, preflight_ok=True):
-    import types
-
     _FakeSendPrinter.instances = []
     _FakeFTPS.stored = []
-    monkeypatch.setattr(make, "_bl", types.SimpleNamespace(Printer=_FakeSendPrinter))
-    monkeypatch.setattr(make, "PrinterFTPS", _FakeFTPS)
-    monkeypatch.setattr(make, "load_credentials", lambda: ("ip", "code", "serial"))
-    monkeypatch.setattr(make, "START_POLL_S", 0.0)
+    monkeypatch.setattr(hsend, "_bl", types.SimpleNamespace(Printer=_FakeSendPrinter))
+    monkeypatch.setattr(hsend, "PrinterFTPS", _FakeFTPS)
+    monkeypatch.setattr(hsend, "load_credentials", lambda: ("ip", "code", "serial"))
+    monkeypatch.setattr(hsend, "START_POLL_S", 0.0)
 
     class _Pre:
         ok = preflight_ok
@@ -163,11 +188,11 @@ def _patch_send_stack(monkeypatch, preflight_ok=True):
             return "  (faked preflight)"
 
     monkeypatch.setattr(
-        make, "_preflight", types.SimpleNamespace(check=lambda *a, **k: _Pre()))
-    monkeypatch.setattr(make, "_profiles", types.SimpleNamespace(
+        hsend, "_preflight", types.SimpleNamespace(check=lambda *a, **k: _Pre()))
+    monkeypatch.setattr(hsend, "_profiles", types.SimpleNamespace(
         expected_filament_type=lambda: "PETG", expected_nozzle_temp=lambda: 250))
-    monkeypatch.setattr(make, "time", types.SimpleNamespace(
-        sleep=lambda s: None, monotonic=time_counter(), strftime=make.time.strftime))
+    monkeypatch.setattr(hsend, "time", types.SimpleNamespace(
+        sleep=lambda s: None, monotonic=time_counter()))
 
 
 def time_counter():
@@ -180,14 +205,24 @@ def time_counter():
     return tick
 
 
-def test_send_happy_path_frame(monkeypatch, tmp_path):
-    _patch_backends(monkeypatch, ['{"wheelbase": 140}'], [None])
-    # bypass codegen/slice: build the staged layout directly and call send_print
+def _staged_frame(tmp_path):
+    """A staged frame build laid out as make leaves it (no renders needed)."""
     dest = tmp_path / "t"
     (dest / "frame").mkdir(parents=True)
+    (dest / "frame.step").write_bytes(b"step bytes")
     (dest / "frame" / "frame.gcode.3mf").write_bytes(b"gcode!")
+    (dest / "manifest.json").write_text(json.dumps({
+        "request": "a frame", "family": "frame", "spec": {"wheelbase": 140},
+        "iterations": 1, "slices": [], "extract_backend": "x",
+        "codegen_backend": "y", "created": "2026-07-21 12:00:00"}),
+        encoding="utf-8")
+    return dest
+
+
+def test_send_happy_path_frame(monkeypatch, tmp_path):
+    dest = _staged_frame(tmp_path)
     _patch_send_stack(monkeypatch)
-    rc = make.send_print(dest, "frame")
+    rc = hsend.send_print(dest, "frame")
     assert rc == 0
     printer = _FakeSendPrinter.instances[0]
     assert printer.started == [("t.gcode.3mf", 1, False)], "use_ams must be False"
@@ -195,19 +230,15 @@ def test_send_happy_path_frame(monkeypatch, tmp_path):
 
 
 def test_send_refuses_failed_preflight(monkeypatch, tmp_path):
-    dest = tmp_path / "t"
-    (dest / "frame").mkdir(parents=True)
-    (dest / "frame" / "frame.gcode.3mf").write_bytes(b"gcode!")
+    dest = _staged_frame(tmp_path)
     _patch_send_stack(monkeypatch, preflight_ok=False)
-    rc = make.send_print(dest, "frame")
+    rc = hsend.send_print(dest, "frame")
     assert rc == 7
     assert not _FakeFTPS.stored, "nothing uploaded after a preflight refusal"
 
 
 def test_send_refuses_unconfirmed_start(monkeypatch, tmp_path):
-    dest = tmp_path / "t"
-    (dest / "frame").mkdir(parents=True)
-    (dest / "frame" / "frame.gcode.3mf").write_bytes(b"gcode!")
+    dest = _staged_frame(tmp_path)
     _patch_send_stack(monkeypatch)
     _FakeSendPrinter.instances = []
     orig_init = _FakeSendPrinter.__init__
@@ -217,23 +248,51 @@ def test_send_refuses_unconfirmed_start(monkeypatch, tmp_path):
         self.states = [("FINISH", None)]  # never reaches RUNNING
 
     monkeypatch.setattr(_FakeSendPrinter, "__init__", stuck_init)
-    rc = make.send_print(dest, "frame")
+    rc = hsend.send_print(dest, "frame")
     assert rc == 9
 
 
+def test_send_cli_refuses_unreviewed(monkeypatch, tmp_path):
+    dest = _staged_frame(tmp_path)
+    _patch_send_stack(monkeypatch)
+    rc = hsend.main([str(dest), "--plate-clear"])
+    assert rc == 10
+    assert not _FakeFTPS.stored, "no printer contact without an approval"
+    assert not _FakeSendPrinter.instances
+
+
+def test_send_cli_refuses_without_plate_clear(monkeypatch, tmp_path):
+    dest = _staged_frame(tmp_path)
+    assert hreview.main([str(dest), "--approve"]) == 0
+    _patch_send_stack(monkeypatch)
+    rc = hsend.main([str(dest)])
+    assert rc == 6
+    assert not _FakeFTPS.stored
+
+
+def test_send_cli_refuses_stale_approval(monkeypatch, tmp_path):
+    dest = _staged_frame(tmp_path)
+    assert hreview.main([str(dest), "--approve"]) == 0
+    (dest / "frame" / "frame.gcode.3mf").write_bytes(b"rebuilt gcode")
+    _patch_send_stack(monkeypatch)
+    rc = hsend.main([str(dest), "--plate-clear"])
+    assert rc == 10
+    assert not _FakeFTPS.stored
+
+
+def test_send_cli_happy_after_approval(monkeypatch, tmp_path):
+    dest = _staged_frame(tmp_path)
+    assert hreview.main([str(dest), "--approve"]) == 0
+    _patch_send_stack(monkeypatch)
+    rc = hsend.main([str(dest), "--plate-clear"])
+    assert rc == 0
+    printer = _FakeSendPrinter.instances[0]
+    assert printer.started == [("t.gcode.3mf", 1, False)]
+
+
 def test_make_slice_stage_wiring(monkeypatch, tmp_path):
-    from toolchain.slicecheck import SliceResult
-
     _patch_backends(monkeypatch, [SPEC_JSON], [GOOD_SCRIPT])
-    staged = []
-
-    def fake_stage(step, dest, part="part"):
-        staged.append((Path(step).name, part))
-        r = SliceResult(part, True, "ok")
-        r.minutes, r.layers, r.filament_cm3 = 10.0, 5, 1.0
-        return r
-
-    monkeypatch.setattr(make, "stage_print", fake_stage)
+    staged = _patch_stage(monkeypatch)
     rc = make.main(["a box", "--name", "t", "--out", str(tmp_path)])
     assert rc == 0
     assert staged == [("body.step", "body"), ("lid.step", "lid")]
