@@ -27,10 +27,21 @@ FTP_USER = "bblp"  # fixed by Bambu firmware; the access code is the password
 
 
 class _ReusedSSLSocket(ssl.SSLSocket):
-    """vsftpd closes data sockets itself; unwrapping again raises."""
+    """Tolerate vsftpd's unclean TLS shutdown without breaking uploads.
+
+    vsftpd often drops a data socket without sending close_notify, so a strict
+    unwrap() raises at the end of a download or LIST. The obvious fix — making
+    unwrap() a no-op — silently breaks STOR: ftplib calls unwrap() precisely to
+    signal end-of-file on upload, so suppressing it leaves the server waiting
+    for data that never ends, and it answers "426 Failure reading network
+    stream". Attempt the shutdown, swallow only its failure.
+    """
 
     def unwrap(self):  # noqa: D102
-        pass
+        try:
+            return super().unwrap()
+        except (OSError, ValueError, ssl.SSLError):
+            return None
 
 
 class PrinterFTPS(ftplib.FTP_TLS):
