@@ -1,5 +1,14 @@
 # cad-agent — STATUS
 
+**PARKED 2026-07-31 at e2e-proven peak (Kerry dev-freeze ruling; close-out
+executed 2026-08-03) — role-track exhibit, resume-load-bearing; pick up
+anytime.** Demo in 5 min: `python -m harness.make "<request>" --send`
+(English → frozen spec → verified CadQuery part → review page → hash-gated
+print). Evidence: f2 frame physically printed; 80-test suite green;
+extraction bench llama3.1:8b 13/13; review-before-print hash-bound approval
+gate. Bundle refreshed 2026-08-02 (`backups/git-bundles`); no GitHub remote —
+public/private remote question is a queued Kerry ruling, not decided here.
+
 **DELEGATION (Kerry, 2026-07-20): full control granted to complete the
 project; the bar is "a product worth buying, despite it not being a product."**
 
