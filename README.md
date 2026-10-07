@@ -3,6 +3,11 @@
 An agent that turns an English request into a verified, 3D-printable part —
 and can't grade its own homework.
 
+**Status:** parked 2026-07-31 after an end-to-end proof: a drone-frame plate went from an
+English request through spec extraction, generated CadQuery, spec-derived verification and an
+OrcaSlicer slice check to a physical print on a Bambu P2S. 80-test pytest suite (needs
+OrcaSlicer installed). Full log: `STATUS.md`.
+
 **Pipeline:** English → frozen spec (pydantic) → agent-written CadQuery code
 (sandboxed subprocess) → deterministic verification against the spec →
 headless slice check (OrcaSlicer, Bambu P2S profiles) → print.
@@ -86,7 +91,7 @@ The approval is hash-bound to the staged artifacts — any rebuild or re-slice
 makes it stale and the send refuses again. A rejection requires a comment;
 that comment is the revision request you take back to the agent.
 
-**Dev:** Python 3.12 (`py -3.12 -m venv .venv`), `pip install cadquery
+**Dev:** Python 3.12 (`python3.12 -m venv .venv`; Windows: `py -3.12 -m venv .venv`), `pip install cadquery
 pydantic pytest trimesh anthropic`, `python -m pytest tests/`. Golden runs:
 `python -m harness.golden --backend claude-code --model sonnet
 [--tasks golden/frame_tasks.json]`; hybrid rows add

@@ -7,7 +7,7 @@
 # Refuse-over-skip: missing venv = named refusal, never a silent pass.
 # tests/conftest.py additionally turns any slicecheck skip into a hard fail.
 
-REPO="C:/Users/PC/cad-agent"
+REPO="$(git rev-parse --show-toplevel)"
 PY="$REPO/.venv/Scripts/python.exe"
 
 cd "$REPO" || { echo "cad-agent merge gate REFUSED: cannot cd to $REPO"; exit 1; }

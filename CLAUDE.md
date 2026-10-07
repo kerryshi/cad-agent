@@ -8,7 +8,7 @@ session.
 - Python is `.venv` (3.12, created with `py -3.12`). The machine's default
   `python` is 3.13 and must NOT be used — cadquery wheels target 3.12 here.
   Run everything as `./.venv/Scripts/python.exe ...`.
-- OrcaSlicer is the PORTABLE build at `C:\Users\PC\tools\OrcaSlicer`
+- OrcaSlicer is the PORTABLE build at `<orca-install-dir>`
   (`CAD_AGENT_ORCA` overrides). Do not winget-install it — the installer needs
   a UAC prompt background shells can't show and fails silently.
 - Orca CLI quirks are documented in `toolchain/slicecheck.py` — read them

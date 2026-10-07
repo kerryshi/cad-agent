@@ -1,13 +1,13 @@
 # cad-agent — STATUS
 
-**PARKED 2026-07-31 at e2e-proven peak (Kerry dev-freeze ruling; close-out
-executed 2026-08-03) — role-track exhibit, resume-load-bearing; pick up
-anytime.** Demo in 5 min: `python -m harness.make "<request>" --send`
+_Internal working log. Start at [README.md](README.md)._
+
+**PARKED 2026-07-31 at e2e-proven peak (dev freeze; close-out
+executed 2026-08-03) — pick up anytime.** Demo in 5 min: `python -m harness.make "<request>" --send`
 (English → frozen spec → verified CadQuery part → review page → hash-gated
 print). Evidence: f2 frame physically printed; 80-test suite green;
 extraction bench llama3.1:8b 13/13; review-before-print hash-bound approval
-gate. Bundle refreshed 2026-08-02 (`backups/git-bundles`); no GitHub remote —
-public/private remote question is a queued Kerry ruling, not decided here.
+gate.
 
 **DELEGATION (Kerry, 2026-07-20): full control granted to complete the
 project; the bar is "a product worth buying, despite it not being a product."**
@@ -269,7 +269,7 @@ Phase-0 spike in a parallel session (gates only the auto-print leg).
 **Environment:** `.venv` = Python 3.12 (`py -3.12`; machine default `python` is
 3.13 — do not use). cadquery 2.8.0, pydantic 2.13.4, trimesh 4.12.2,
 anthropic 0.117.0, pytest. **OrcaSlicer 2.4.2 portable** at
-`C:\Users\PC\tools\OrcaSlicer` (winget install fails silently from a
+`<orca-install-dir>` (winget install fails silently from a
 background shell — UAC 0x800704c7; portable build needs no elevation;
 `CAD_AGENT_ORCA` env var overrides the path). Ollama 0.32.1 up (llama3.1:8b,
 qwen3:4b, qwen3:4b-instruct-2507-q4_K_M, qwen3-coder:30b, qwen2.5-coder:14b,
@@ -319,7 +319,7 @@ Credentials live in `printleg/printer.env` — GITIGNORED, never commit.
   no-storage-at-all. Symptom set: `553 Could not create file` on every STOR
   path, `MKD` refused, `/` lists empty, `sdcard: False`. All four are one cause
   and none of them names it. Resolved by backing up the installer
-  (`C:\Users\PC\usb-backup-win10-installer`, 908 files / 4.450 GB, verified),
+  (908 files / 4.450 GB, verified),
   reformatting FAT32, restoring it (install.esd is 3.78 GB, under FAT32's 4 GB
   cap, so it still works as a UEFI installer) and adding the print file.
 - **FTPS needs two non-obvious things** (both in `printleg/ftps.py`): implicit

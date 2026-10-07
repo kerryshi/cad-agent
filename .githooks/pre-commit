@@ -5,7 +5,7 @@
 # Either state re-runs the full merge gate here. Plain commits pass
 # immediately — the suite (27s) gates merges, not every commit.
 
-REPO="C:/Users/PC/cad-agent"
+REPO="$(git rev-parse --show-toplevel)"
 cd "$REPO" || { echo "cad-agent pre-commit REFUSED: cannot cd to $REPO"; exit 1; }
 
 GITDIR=$(git rev-parse --git-dir) || {
