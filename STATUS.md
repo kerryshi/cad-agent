@@ -7,7 +7,7 @@ executed 2026-08-03) — pick up anytime.** Demo in 5 min: `python -m harness.ma
 (English → frozen spec → verified CadQuery part → review page → hash-gated
 print). Evidence: f2 frame physically printed; 80-test suite green;
 extraction bench llama3.1:8b 13/13; review-before-print hash-bound approval
-gate.
+gate. GitHub remote added 2026-10-07 (kerryshi/cad-agent).
 
 **DELEGATION (Kerry, 2026-07-20): full control granted to complete the
 project; the bar is "a product worth buying, despite it not being a product."**

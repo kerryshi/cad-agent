@@ -83,7 +83,7 @@ exit code.
 **Review before print** — the printer is gated on a human verdict recorded
 after looking at the build:
 ```
-start prints/pi-box/review.html                 # look at what it made
+open prints/pi-box/review.html                  # look at what it made (Windows: start)
 python -m harness.review prints/pi-box --approve       # or --reject --comment "..."
 python -m harness.send prints/pi-box --plate-clear     # refused without approval
 ```
